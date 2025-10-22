@@ -378,11 +378,9 @@ export default function ReportDetailPage({ params }) {
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
             <div className="space-y-3">
               <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <FiMessageSquare className="mr-2 h-4 w-4" />
                 Send Message
               </button>
               <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                <FiCheckCircle className="mr-2 h-4 w-4" />
                 Mark as Resolved
               </button>
             </div>
