@@ -24,3 +24,33 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.scrollbar-hide {
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;  
+  scrollbar-width: none; 
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  display: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  display: none;
+}
+
+/* More specific selector for sidebar */
+.sidebar-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.sidebar-container::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}

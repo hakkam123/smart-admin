@@ -131,8 +131,7 @@ export default function ShopsPage() {
             href="/admin/shops/edit"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
           >
-            <FiEdit className="mr-2 h-4 w-4" />
-            Edit Shop
+            Edit Information
           </Link>
         </div>
       </div>

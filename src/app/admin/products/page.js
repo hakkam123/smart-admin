@@ -128,7 +128,6 @@ export default function ProductsPage() {
             href="/admin/products/add"
             className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 flex items-center gap-2 transition-colors"
             >
-            <FiPlus className="w-4 h-4" />
             Tambah Produk
             </Link>
         </div>
