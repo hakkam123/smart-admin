@@ -15,6 +15,7 @@ import {
   FiClock,
   FiMessageCircle,
   FiExternalLink,
+  FiShoppingBag,
   FiStar,
   FiBell,
   FiPackage,
@@ -86,13 +87,13 @@ export default function MasterDashboard() {
       description: 'Active products'
     },
     {
-      title: 'Total Visitor',
-      value: '45,892',
-      change: '+15.2%',
+      title: 'Total Stores',
+      value: '156',
+      change: '+12.5%',
       isPositive: true,
-      icon: FiEye,
+      icon: FiShoppingBag,
       color: 'bg-purple-500',
-      description: 'Monthly visitors'
+      description: 'Active stores'
     },
     {
       title: 'Total New Users',
@@ -208,7 +209,6 @@ export default function MasterDashboard() {
             </div>
           </div>
 
-          {/* Chart dengan background kuning */}
           <div className="h-64 bg-yellow-50 rounded-lg p-4">
             <svg className="w-full h-full" viewBox="0 0 400 200">
               {/* Chart Grid */}

@@ -10,6 +10,7 @@ import {
   FiBarChart2,
   FiGrid,
   FiUsers,
+  FiUser,
   FiSettings,
   FiLogOut,
   FiChevronDown,
@@ -54,7 +55,6 @@ const MasterSidebar = () => {
       items: [
         { name: 'Categories', icon: FiGrid, href: '/master/categories', isNew: true },
         { name: 'Products', icon: FiPackage, href: '/master/products' },
-        { name: 'Brands', icon: FiTag, href: '/master/brands' }
       ]
     },
     {
@@ -62,7 +62,8 @@ const MasterSidebar = () => {
       items: [
         { name: 'Orders', icon: FiShoppingCart, href: '/master/orders' },
         { name: 'Shops', icon: FiShoppingBag, href: '/master/shops' },
-        { name: 'Customers', icon: FiUsers, href: '/master/customers' }
+        { name: 'Users', icon: FiUsers, href: '/master/users', isNew: true },
+        { name: 'Customers', icon: FiUser, href: '/master/customers' }
       ]
     },
     {
@@ -75,8 +76,7 @@ const MasterSidebar = () => {
       title: 'SYSTEM',
       expandable: true,
       items: [
-        { name: 'Settings', icon: FiSettings, href: '/master/settings' },
-        { name: 'User Management', icon: FiShield, href: '/master/users' },
+        { name: 'Settings', icon: FiSettings, href: '/master/settings' }
       ]
     }
   ];

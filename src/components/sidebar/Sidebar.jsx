@@ -45,12 +45,12 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 h-screen bg-gradient-to-br from-orange-900 via-orange-800 to-orange-700 text-white flex flex-col font-sans">
-      <div className="p-5 border-b border-white/10">
+      <div className="p-6 border-b border-white/10">
         <Link href="/admin" className="flex items-center gap-3">
-          {/* <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-orange-600 rounded-lg flex items-center justify-center font-bold text-base">
-            S
-          </div> */}
-          <span className="text-lg font-semibold">SMART</span>
+          <div>
+            <span className="text-xl font-bold tracking-wide">SMART</span>
+            <p className="text-xs text-white/60 mt-0.5">Sukmajaya Market and Trade</p>
+          </div>
         </Link>
       </div>
 
@@ -75,11 +75,6 @@ const Sidebar = () => {
                 >
                   <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'opacity-100' : 'opacity-80'}`} />
                   <span className="text-sm font-medium flex-1">{item.name}</span>
-                  {item.isNew && (
-                    <span className="bg-cyan-400 text-black text-xs font-semibold px-2 py-0.5 rounded-full uppercase">
-                      New
-                    </span>
-                  )}
                 </Link>
               );
             })}
