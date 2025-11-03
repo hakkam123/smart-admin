@@ -75,7 +75,7 @@ export default function CustomerRelationship() {
                     <p className="text-sm text-gray-600 mt-1 truncate">{chat.review}</p>
                     <div className="flex items-center mt-2">
                       <FiMessageCircle className="text-gray-400 mr-1" size={12} />
-                      <span className="text-xs text-gray-500">{chat.createdAt}</span>
+                      <span className="text-xs text-gray-500">{new Date(chat.createdAt).toDateString()}</span>
                     </div>
                   </div>
                 </div>
