@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import CardSeller from '@/components/store/CardSeller';
 import { 
   FiTrendingUp, 
   FiUsers, 
   FiShoppingCart, 
   FiDollarSign,
-  FiArrowUp,
-  FiArrowDown,
-  FiMoreVertical,
   FiFilter,
   FiCalendar,
   FiClock,
@@ -131,32 +129,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                <div className="flex items-center mt-2">
-                  {stat.isPositive ? (
-                    <FiArrowUp className="text-green-500 mr-1" size={16} />
-                  ) : (
-                    <FiArrowDown className="text-red-500 mr-1" size={16} />
-                  )}
-                  <span className={`text-sm ${stat.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                    {stat.change}
-                  </span>
-                  <span className="text-gray-500 text-sm ml-1">vs last month</span>
-                </div>
-              </div>
-              <div className={`${stat.color} p-3 rounded-lg`}>
-                <stat.icon className="text-white" size={24} />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <CardSeller />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
