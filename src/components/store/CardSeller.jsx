@@ -20,32 +20,24 @@ export default function CardSeller() {
 
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState({
-        products: 0,
-        revenue: 0,
-        orders: 0,
-        stores: 0,
-        allOrders: [],
+        totalProducts: 0,
+        totalEarnings: 0,
+        totalOrders: 0,
+        ratings: [],
     })
 
-    // const dashboardCardsData = [
-    //     { title: 'Total Products', value: dashboardData.products, icon: ShoppingBasketIcon },
-    //     { title: 'Total Revenue', value: currency + dashboardData.revenue, icon: CircleDollarSignIcon },
-    //     { title: 'Total Orders', value: dashboardData.orders, icon: TagsIcon },
-    //     { title: 'Total Stores', value: dashboardData.stores, icon: StoreIcon },
-    // ]
-
     const stats = [
-        { title: 'Total Revenue', value: currency + dashboardData.revenue, change: '+20.1%', isPositive: true, icon: FiDollarSign, color: 'bg-green-500' },
-        { title: 'Total Orders', value: dashboardData.orders, change: '+12.5%', isPositive: true, icon: FiShoppingCart, color: 'bg-blue-500' },
-        { title: 'Total Products', value: dashboardData.products, change: '+5.3%', isPositive: true, icon: FiTrendingUp, color: 'bg-purple-500' },
-        { title: 'Total Customers', value: '890', change: '+8.7%', isPositive: true, icon: FiUsers, color: 'bg-orange-500' }
+        { title: 'Total Revenue', value: currency + dashboardData.totalEarnings, change: '+20.1%', isPositive: true, icon: FiDollarSign, color: 'bg-green-500' },
+        { title: 'Total Orders', value: dashboardData.totalOrders, change: '+12.5%', isPositive: true, icon: FiShoppingCart, color: 'bg-blue-500' },
+        { title: 'Total Products', value: dashboardData.totalProducts, change: '+5.3%', isPositive: true, icon: FiTrendingUp, color: 'bg-purple-500' },
+        { title: 'Total Rating', value: dashboardData.ratings.length, change: '+8.7%', isPositive: true, icon: FiUsers, color: 'bg-orange-500' }
     ]
 
     const fetchDashboardData = async () => {
         try {
             const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
             const token = await getToken()
-            const {data} = await axios.get(`${baseUrl}/api/admin/dashboard`, {
+            const {data} = await axios.get(`${baseUrl}/api/store/dashboard`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             setDashboardData(data.dashboardData)

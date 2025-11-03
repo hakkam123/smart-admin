@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
+import CustomerRelationship from '@/components/store/CustomerRelationship';
 import { 
   FiTrendingUp, 
   FiUsers, 
@@ -43,41 +44,6 @@ export default function Dashboard() {
     ];
     setRecentChats(mockChats);
   }, []);
-
-  const stats = [
-    {
-      title: 'Total Revenue',
-      value: 'Rp 45,231,890',
-      change: '+20.1%',
-      isPositive: true,
-      icon: FiDollarSign,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Total Orders',
-      value: '2,350',
-      change: '+12.5%',
-      isPositive: true,
-      icon: FiShoppingCart,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Total Products',
-      value: '1,234',
-      change: '+5.3%',
-      isPositive: true,
-      icon: FiTrendingUp,
-      color: 'bg-purple-500'
-    },
-    {
-      title: 'Total Customers',
-      value: '890',
-      change: '+8.7%',
-      isPositive: true,
-      icon: FiUsers,
-      color: 'bg-orange-500'
-    }
-  ];
 
   const bestProducts = [
     { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8, change: '+15.2%' },
@@ -285,7 +251,7 @@ export default function Dashboard() {
         </div>
 
         {/* Customer Relationship */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Customer Relationship</h3>
             <Link 
@@ -325,7 +291,8 @@ export default function Dashboard() {
               </Link>
             ))}
           </div>
-        </div>
+        </div> */}
+        <CustomerRelationship />
       </div>
     </div>
   );
