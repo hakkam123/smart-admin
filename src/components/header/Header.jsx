@@ -1,7 +1,9 @@
 import React from 'react';
-import { FiSearch, FiUser } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
+import { UserButton } from "@clerk/nextjs"
 
 const Header = () => {
+
   return (
     <header className="w-full h-16 bg-gray-100 border-b border-gray-200 flex items-center justify-between px-6">
       <div className="flex items-center">
@@ -25,9 +27,7 @@ const Header = () => {
           </button>
         </div>
 
-        <button className="w-10 h-10 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors">
-          <FiUser className="w-5 h-5" />
-        </button>
+        <UserButton />
       </div>
     </header>
   );
