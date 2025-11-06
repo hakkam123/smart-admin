@@ -25,10 +25,7 @@ export default function UsersManagementPage() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [showApprovalModal, setShowApprovalModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [actionType, setActionType] = useState(''); // 'approve' or 'decline'
+  const [roleFilter, setRoleFilter] = useState('all');
 
   useEffect(() => {
     // Mock users data - replace with actual API call
@@ -39,16 +36,14 @@ export default function UsersManagementPage() {
         email: 'john.doe@example.com',
         phone: '+62 812-3456-7890',
         avatar: '/images/users/john.jpg',
-        status: 'pending',
         role: 'customer',
         registeredAt: '2024-01-15T10:30:00Z',
-        lastLogin: null,
+        lastLogin: '2024-01-19T14:30:00Z',
         address: 'Jakarta, Indonesia',
         dateOfBirth: '1990-05-15',
         gender: 'Male',
-        verificationDocuments: ['KTP', 'SIM'],
-        businessType: null,
-        companyName: null
+        totalOrders: 12,
+        totalSpent: 'Rp 2,450,000'
       },
       {
         id: '2',
@@ -56,16 +51,14 @@ export default function UsersManagementPage() {
         email: 'jane.smith@company.com',
         phone: '+62 813-9876-5432',
         avatar: '/images/users/jane.jpg',
-        status: 'approved',
-        role: 'vendor',
+        role: 'customer',
         registeredAt: '2024-01-10T14:20:00Z',
         lastLogin: '2024-01-20T09:15:00Z',
         address: 'Bandung, Indonesia',
         dateOfBirth: '1985-08-22',
         gender: 'Female',
-        verificationDocuments: ['KTP', 'NPWP', 'SIUP'],
-        businessType: 'Fashion Retail',
-        companyName: 'Jane Fashion Store'
+        totalOrders: 8,
+        totalSpent: 'Rp 1,890,000'
       },
       {
         id: '3',
@@ -73,16 +66,14 @@ export default function UsersManagementPage() {
         email: 'ahmad.rahman@gmail.com',
         phone: '+62 814-5555-1234',
         avatar: '/images/users/ahmad.jpg',
-        status: 'declined',
-        role: 'customer',
+        role: 'vendor',
         registeredAt: '2024-01-12T16:45:00Z',
-        lastLogin: null,
+        lastLogin: '2024-01-18T12:30:00Z',
         address: 'Surabaya, Indonesia',
         dateOfBirth: '1992-12-03',
         gender: 'Male',
-        verificationDocuments: ['KTP'],
-        businessType: null,
-        companyName: null
+        totalOrders: 25,
+        totalSpent: 'Rp 5,670,000'
       },
       {
         id: '4',
@@ -90,16 +81,14 @@ export default function UsersManagementPage() {
         email: 'sarah.wilson@tech.com',
         phone: '+62 815-7777-8888',
         avatar: '/images/users/sarah.jpg',
-        status: 'pending',
         role: 'vendor',
         registeredAt: '2024-01-18T11:20:00Z',
         lastLogin: null,
         address: 'Medan, Indonesia',
         dateOfBirth: '1988-03-17',
         gender: 'Female',
-        verificationDocuments: ['KTP', 'NPWP'],
-        businessType: 'Technology Services',
-        companyName: 'Tech Solutions Inc'
+        totalOrders: 0,
+        totalSpent: 'Rp 0'
       },
       {
         id: '5',
@@ -107,16 +96,14 @@ export default function UsersManagementPage() {
         email: 'michael.chen@email.com',
         phone: '+62 816-9999-0000',
         avatar: '/images/users/michael.jpg',
-        status: 'approved',
         role: 'customer',
         registeredAt: '2024-01-05T08:30:00Z',
         lastLogin: '2024-01-19T14:45:00Z',
         address: 'Yogyakarta, Indonesia',
         dateOfBirth: '1995-09-28',
         gender: 'Male',
-        verificationDocuments: ['KTP', 'Passport'],
-        businessType: null,
-        companyName: null
+        totalOrders: 15,
+        totalSpent: 'Rp 3,210,000'
       }
     ];
 
@@ -150,38 +137,36 @@ export default function UsersManagementPage() {
       );
     }
 
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(user => user.status === statusFilter);
+    // Filter by role
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
     }
 
     setFilteredUsers(filtered);
-  }, [users, searchTerm, statusFilter]);
+  }, [users, searchTerm, roleFilter]);
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'declined':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const getActivityColor = (lastLogin) => {
+    if (!lastLogin) return 'bg-gray-100 text-gray-800';
+    
+    const loginDate = new Date(lastLogin);
+    const now = new Date();
+    const daysDiff = Math.floor((now - loginDate) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 1) return 'bg-green-100 text-green-800';
+    if (daysDiff <= 7) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'approved':
-        return <FiUserCheck className="h-4 w-4" />;
-      case 'pending':
-        return <FiClock className="h-4 w-4" />;
-      case 'declined':
-        return <FiUserX className="h-4 w-4" />;
-      default:
-        return <FiUsers className="h-4 w-4" />;
-    }
+  const getActivityStatus = (lastLogin) => {
+    if (!lastLogin) return 'Never Login';
+    
+    const loginDate = new Date(lastLogin);
+    const now = new Date();
+    const daysDiff = Math.floor((now - loginDate) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff <= 1) return 'Active';
+    if (daysDiff <= 7) return 'Recent';
+    return 'Inactive';
   };
 
   const getRoleColor = (role) => {
@@ -197,82 +182,16 @@ export default function UsersManagementPage() {
     }
   };
 
-  const handleApprove = (user) => {
-    setSelectedUser(user);
-    setActionType('approve');
-    setShowApprovalModal(true);
-  };
-
-  const handleDecline = (user) => {
-    setSelectedUser(user);
-    setActionType('decline');
-    setShowApprovalModal(true);
-  };
-
-  const confirmAction = () => {
-    if (!selectedUser) return;
-
-    const newStatus = actionType === 'approve' ? 'approved' : 'declined';
-    
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.id === selectedUser.id
-          ? { ...user, status: newStatus }
-          : user
-      )
-    );
-
-    setShowApprovalModal(false);
-    setSelectedUser(null);
-    setActionType('');
-
-    // Show success message
-    const message = actionType === 'approve' 
-      ? `User ${selectedUser.name} has been approved successfully!`
-      : `User ${selectedUser.name} has been declined.`;
-    
-    alert(message);
-  };
-
   const getActionButtons = (user) => {
-    switch (user.status) {
-      case 'pending':
-        return (
-          <div className="flex items-center space-x-2">
-            <Link 
-              href={`/master/users/${user.id}`}
-              className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-              title="View Details"
-            >
-              <FiEye className="h-4 w-4" />
-            </Link>
-            <button
-              onClick={() => handleApprove(user)}
-              className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
-              title="Approve User"
-            >
-              <FiCheck className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => handleDecline(user)}
-              className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
-              title="Decline User"
-            >
-              <FiX className="h-4 w-4" />
-            </button>
-          </div>
-        );
-      default:
-        return (
-          <Link 
-            href={`/master/users/${user.id}`}
-            className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-            title="View Details"
-          >
-            <FiEye className="h-4 w-4" />
-          </Link>
-        );
-    }
+    return (
+      <Link 
+        href={`/master/users/${user.id}`}
+        className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
+        title="View User Details"
+      >
+        <FiEye className="h-4 w-4" />
+      </Link>
+    );
   };
 
   if (loading) {
@@ -306,8 +225,8 @@ export default function UsersManagementPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
-            <p className="text-sm text-gray-500">Manage user registrations and accounts</p>
+            <h1 className="text-2xl font-bold text-gray-900">Users Monitoring</h1>
+            <p className="text-sm text-gray-500">Monitor registered users and their activities</p>
           </div>
           <div className="flex items-center space-x-3">
             <button
@@ -317,63 +236,6 @@ export default function UsersManagementPage() {
               <FiRefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="shrink-0">
-              <FiUsers className="h-8 w-8 text-slate-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl font-semibold text-gray-900">{users.length}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="shrink-0">
-              <FiClock className="h-8 w-8 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Pending Approval</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {users.filter(u => u.status === 'pending').length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="shrink-0">
-              <FiUserCheck className="h-8 w-8 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Approved</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {users.filter(u => u.status === 'approved').length}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="shrink-0">
-              <FiUserX className="h-8 w-8 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Declined</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {users.filter(u => u.status === 'declined').length}
-              </p>
-            </div>
           </div>
         </div>
       </div>
@@ -396,20 +258,20 @@ export default function UsersManagementPage() {
               />
             </div>
 
-            {/* Status Filter */}
+            {/* Role Filter */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiFilter className="h-5 w-5 text-gray-400" />
               </div>
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
                 className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
               >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="declined">Declined</option>
+                <option value="all">All Roles</option>
+                <option value="customer">Customer</option>
+                <option value="vendor">Vendor</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
@@ -439,13 +301,13 @@ export default function UsersManagementPage() {
                   Role
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Activity
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Orders
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Registered
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Login
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -493,28 +355,26 @@ export default function UsersManagementPage() {
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
                       {user.role}
                     </span>
-                    {user.companyName && (
-                      <div className="text-xs text-gray-500 mt-1">{user.companyName}</div>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.status)}`}>
-                      {getStatusIcon(user.status)}
-                      <span className="ml-1">{user.status}</span>
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getActivityColor(user.lastLogin)}`}>
+                      <span>{getActivityStatus(user.lastLogin)}</span>
                     </span>
+                    {user.lastLogin && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(user.lastLogin).toLocaleDateString()}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <div className="text-sm font-medium">{user.totalOrders} orders</div>
+                    <div className="text-sm text-gray-500">{user.totalSpent}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex items-center">
                       <FiCalendar className="mr-1 h-4 w-4 text-gray-400" />
                       {new Date(user.registeredAt).toLocaleDateString()}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {user.lastLogin ? (
-                      new Date(user.lastLogin).toLocaleDateString()
-                    ) : (
-                      <span className="text-gray-400">Never</span>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {getActionButtons(user)}
@@ -531,7 +391,7 @@ export default function UsersManagementPage() {
             <FiUsers className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || statusFilter !== 'all' 
+              {searchTerm || roleFilter !== 'all' 
                 ? 'Try adjusting your search or filter criteria.'
                 : 'No users have registered yet.'
               }
@@ -578,58 +438,7 @@ export default function UsersManagementPage() {
         )}
       </div>
 
-      {/* Approval/Decline Modal */}
-      {showApprovalModal && selectedUser && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3 text-center">
-              <div className={`mx-auto flex items-center justify-center h-12 w-12 rounded-full ${
-                actionType === 'approve' ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                {actionType === 'approve' ? (
-                  <FiCheck className="h-6 w-6 text-green-600" />
-                ) : (
-                  <FiX className="h-6 w-6 text-red-600" />
-                )}
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-2">
-                {actionType === 'approve' ? 'Approve User' : 'Decline User'}
-              </h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to {actionType} <strong>{selectedUser.name}</strong>&apos;s account?
-                  {actionType === 'approve' 
-                    ? ' They will be able to access the platform.'
-                    : ' They will not be able to access the platform.'
-                  }
-                </p>
-              </div>
-              <div className="items-center px-4 py-3">
-                <button
-                  onClick={confirmAction}
-                  className={`px-4 py-2 text-white text-base font-medium rounded-md w-24 mr-3 ${
-                    actionType === 'approve' 
-                      ? 'bg-green-600 hover:bg-green-700' 
-                      : 'bg-red-600 hover:bg-red-700'
-                  }`}
-                >
-                  {actionType === 'approve' ? 'Approve' : 'Decline'}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowApprovalModal(false);
-                    setSelectedUser(null);
-                    setActionType('');
-                  }}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

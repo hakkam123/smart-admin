@@ -66,43 +66,30 @@ export default function MasterDashboard() {
     setRecentServices(mockServices);
   }, []);
 
-  // Master Dashboard Stats (berbeda dari admin)
   const masterStats = [
     {
       title: 'Total Orders',
       value: '3,847',
-      change: '+12.3%',
-      isPositive: true,
       icon: FiShoppingCart,
       color: 'bg-blue-500',
-      description: 'All time orders'
     },
     {
       title: 'Total Products',
       value: '2,156',
-      change: '+8.7%',
-      isPositive: true,
       icon: FiPackage,
       color: 'bg-green-500',
-      description: 'Active products'
     },
     {
       title: 'Total Stores',
       value: '156',
-      change: '+12.5%',
-      isPositive: true,
       icon: FiShoppingBag,
       color: 'bg-purple-500',
-      description: 'Active stores'
     },
     {
       title: 'Total New Users',
       value: '1,623',
-      change: '+22.1%',
-      isPositive: true,
       icon: FiUsers,
       color: 'bg-orange-500',
-      description: 'This month'
     }
   ];
 
@@ -157,39 +144,24 @@ export default function MasterDashboard() {
         </div>
       </div>
 
-      {/* Master Stats Cards - Layout berbeda dari admin */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {masterStats.map((stat, index) => (
-          <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`${stat.color} p-2 rounded-lg`}>
-                    <stat.icon className="text-white" size={20} />
-                  </div>
-                  <div className="flex items-center">
-                    {stat.isPositive ? (
-                      <FiArrowUp className="text-green-500 mr-1" size={14} />
-                    ) : (
-                      <FiArrowDown className="text-red-500 mr-1" size={14} />
-                    )}
-                    <span className={`text-sm font-medium ${stat.isPositive ? 'text-green-500' : 'text-red-500'}`}>
-                      {stat.change}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
-                <p className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</p>
-                <p className="text-xs text-gray-500">{stat.description}</p>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {masterStats.map((stat, index) => (
+        <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className={`${stat.color} p-2 rounded-md w-10 h-10 flex items-center justify-center mb-3`}>
+                <stat.icon className="text-white" size={16} />
               </div>
+              <p className="text-sm text-gray-600 mb-2">{stat.title}</p>
+              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+    </div>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Product Sales Chart - dengan background kuning seperti gambar */}
         <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <div>

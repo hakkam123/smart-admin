@@ -34,11 +34,7 @@ const MasterSidebar = () => {
     // Clear localStorage
     localStorage.removeItem('isAdminLoggedIn');
     localStorage.removeItem('adminUser');
-    
-    // Clear cookies
     document.cookie = 'isAdminLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    
-    // Redirect to login
     window.location.href = '/login';
   };
 
@@ -47,14 +43,12 @@ const MasterSidebar = () => {
       title: 'DASHBOARD',
       items: [
         { name: 'Overview', icon: FiHome, isNew: true, href: '/master' },
-        { name: 'Analytics', icon: FiTrendingUp, href: '/master/analytics' }
       ]
     },
     {
       title: 'CATALOG MANAGEMENT',
       items: [
         { name: 'Categories', icon: FiGrid, href: '/master/categories', isNew: true },
-        { name: 'Products', icon: FiPackage, href: '/master/products' },
       ]
     },
     {
@@ -63,20 +57,12 @@ const MasterSidebar = () => {
         { name: 'Orders', icon: FiShoppingCart, href: '/master/orders' },
         { name: 'Shops', icon: FiShoppingBag, href: '/master/shops' },
         { name: 'Users', icon: FiUsers, href: '/master/users', isNew: true },
-        { name: 'Customers', icon: FiUser, href: '/master/customers' }
       ]
     },
     {
       title: 'COMMUNICATION',
       items: [
         { name: 'Reports', icon: FiBarChart2, href: '/master/reports' }
-      ]
-    },
-    {
-      title: 'SYSTEM',
-      expandable: true,
-      items: [
-        { name: 'Settings', icon: FiSettings, href: '/master/settings' }
       ]
     }
   ];
