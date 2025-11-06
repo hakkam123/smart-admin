@@ -1,22 +1,22 @@
 'use client';
-
 import React from 'react';
-import Sidebar from '@/components/sidebar/Sidebar';
-import Header from '@/components/header/Header';
+import { SignedIn, SignedOut, SignIn } from "@clerk/nextjs";
+import StoreLayout from "@/components/store/StoreLayout";
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        
-        <main className="flex-1 overflow-y-auto p-6">
+    <>
+      <SignedIn>
+        <StoreLayout>
           {children}
-        </main>
-      </div>
-    </div>
+        </StoreLayout>
+      </SignedIn>
+
+      <SignedOut>
+          <div className="min-h-screen flex items-center justify-center">
+              <SignIn fallbackRedirectUrl="/admin" routing="hash" />
+          </div>
+      </SignedOut>
+    </>
   );
 }
