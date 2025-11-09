@@ -3,110 +3,63 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@clerk/nextjs';
 import { 
   FiPlus, 
   FiSearch, 
-  FiFilter,
-  FiMoreVertical,
   FiEdit3,
   FiTrash2,
   FiEye,
-  FiGrid,
-  FiList,
   FiTag,
-  FiCalendar,
-  FiPackage
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(null);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    image: '',
-    status: 'active',
-    slug: ''
-  });
+  const { getToken } = useAuth();
+  
+  // Categories state
+  const [categories, setCategories] = useState([]);
 
-  // Mock categories data
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: 'Electronics',
-      description: 'Electronic devices and gadgets',
-      image: '/api/placeholder/200/150',
-      status: 'active',
-      slug: 'electronics',
-      productsCount: 234,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Fashion',
-      description: 'Clothing and accessories',
-      image: '/api/placeholder/200/150',
-      status: 'active',
-      slug: 'fashion',
-      productsCount: 156,
-      createdAt: '2024-01-10'
-    },
-    {
-      id: 3,
-      name: 'Home & Garden',
-      description: 'Home improvement and garden supplies',
-      image: '/api/placeholder/200/150',
-      status: 'active',
-      slug: 'home-garden',
-      productsCount: 89,
-      createdAt: '2024-01-08'
-    },
-    {
-      id: 4,
-      name: 'Sports',
-      description: 'Sports equipment and fitness gear',
-      image: '/api/placeholder/200/150',
-      status: 'inactive',
-      slug: 'sports',
-      productsCount: 67,
-      createdAt: '2024-01-05'
-    },
-    {
-      id: 5,
-      name: 'Books',
-      description: 'Books and educational materials',
-      image: '/api/placeholder/200/150',
-      status: 'active',
-      slug: 'books',
-      productsCount: 145,
-      createdAt: '2024-01-03'
-    },
-    {
-      id: 6,
-      name: 'Toys & Games',
-      description: 'Toys and gaming accessories',
-      image: '/api/placeholder/200/150',
-      status: 'active',
-      slug: 'toys-games',
-      productsCount: 78,
-      createdAt: '2024-01-01'
+  // Fetch categories from API
+  const fetchCategories = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const { data } = await axios.get(`${baseUrl}/api/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (data.success) {
+        // Format the API response to match the expected format for the table
+        const formattedCategories = data.data.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          description: cat.description,
+          image: cat.image,
+          status: cat.status.toLowerCase(),
+          slug: cat.slug,
+          productsCount: cat.productsCount || 0,
+          createdAt: new Date(cat.createdAt).toISOString().split('T')[0]
+        }));
+        setCategories(formattedCategories);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Failed to fetch categories');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
+  // Fetch categories on component mount
   useEffect(() => {
-    if (formData.name) {
-      const slug = formData.name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-');
-      setFormData(prev => ({ ...prev, slug }));
-    }
-  }, [formData.name]);
+    fetchCategories();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -116,54 +69,31 @@ export default function CategoriesPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (editingCategory) {
-      // Update category
-      setCategories(prev => prev.map(cat => 
-        cat.id === editingCategory.id 
-          ? { ...cat, ...formData, id: editingCategory.id }
-          : cat
-      ));
-    } else {
-      // Add new category
-      const newCategory = {
-        ...formData,
-        id: Date.now(),
-        productsCount: 0,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setCategories(prev => [newCategory, ...prev]);
-    }
 
-    // Reset form
-    setFormData({
-      name: '',
-      description: '',
-      image: '',
-      status: 'active',
-      slug: ''
-    });
-    setShowAddForm(false);
-    setEditingCategory(null);
-  };
 
-  const handleEdit = (category) => {
-    setFormData({
-      name: category.name,
-      description: category.description,
-      image: category.image,
-      status: category.status,
-      slug: category.slug
-    });
-    setEditingCategory(category);
-    setShowAddForm(true);
-  };
 
-  const handleDelete = (id) => {
+
+  const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this category?')) {
-      setCategories(prev => prev.filter(cat => cat.id !== id));
+      setDeleting(id);
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = await getToken();
+        const response = await axios.delete(`${baseUrl}/api/categories/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          toast.success('Category deleted successfully');
+          setCategories(prev => prev.filter(cat => cat.id !== id));
+        } else {
+          toast.error(response.data.message || 'Failed to delete category');
+        }
+      } catch (error) {
+        toast.error(error?.response?.data?.message || error.message || 'Error deleting category');
+      } finally {
+        setDeleting(null);
+      }
     }
   };
 
@@ -181,6 +111,47 @@ export default function CategoriesPage() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Categories Management</h1>
+            <p className="text-gray-600 mt-1">Manage product categories and classifications</p>
+          </div>
+          <Link
+            href="/master/categories/add"
+            className="inline-flex items-center px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+          >
+            Add Category
+          </Link>
+        </div>
+        <div className="animate-pulse">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between py-4 border-b border-gray-100">
+                  <div className="flex items-center space-x-4">
+                    <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
+                      <div className="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-16"></div>
+                  <div className="h-4 bg-gray-200 rounded w-20"></div>
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="h-8 w-20 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
@@ -306,19 +277,24 @@ export default function CategoriesPage() {
                       >
                         <FiEye className="h-4 w-4" />
                       </Link>
-                      <button
-                        onClick={() => handleEdit(category)}
+                      <Link
+                        href={`/master/categories/edit/${category.id}`}
                         className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
                         title="Edit Category"
                       >
                         <FiEdit3 className="h-4 w-4" />
-                      </button>
+                      </Link>
                       <button
                         onClick={() => handleDelete(category.id)}
-                        className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                        className={`p-1 rounded hover:bg-red-50 ${deleting === category.id ? 'text-gray-400' : 'text-red-600 hover:text-red-900'}`}
                         title="Delete Category"
+                        disabled={deleting === category.id}
                       >
-                        <FiTrash2 className="h-4 w-4" />
+                        {deleting === category.id ? (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"></div>
+                        ) : (
+                          <FiTrash2 className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                   </td>

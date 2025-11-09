@@ -3,10 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  FiArrowLeft, 
-  FiEdit3, 
-  FiTrash2,
+import { useAuth } from '@clerk/nextjs';
+import { useParams } from 'next/navigation';
+import {
+  FiArrowLeft,
   FiTag,
   FiCalendar,
   FiPackage,
@@ -14,63 +14,35 @@ import {
   FiToggleRight,
   FiSettings
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
-export default function CategoryDetailPage({ params }) {
+export default function CategoryDetailPage() {
+  const params = useParams();
+  const id = params?.id;
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-
+  const { getToken } = useAuth();
 
   useEffect(() => {
-    const mockCategoriesData = [
-      {
-        id: '1',
-        name: 'Electronics',
-        slug: 'electronics',
-        description: 'All electronic devices and gadgets including smartphones, laptops, and accessories',
-        status: 'Active',
-        productsCount: 156,
-        parentCategory: null,
-        image: '/images/categories/electronics.jpg',
-        metaTitle: 'Electronics - Best Gadgets and Devices',
-        metaDescription: 'Shop the latest electronics, smartphones, laptops, and tech accessories at great prices.',
-        metaKeywords: 'electronics, gadgets, smartphones, laptops, tech',
-        sortOrder: 1,
-        createdAt: '2024-01-15T10:30:00Z',
-        updatedAt: '2024-01-20T15:45:00Z',
-        createdBy: 'Admin User',
-        updatedBy: 'Admin User'
-      },
-      {
-        id: '2',
-        name: 'Fashion',
-        slug: 'fashion',
-        description: 'Trendy clothing, shoes, and accessories for men and women',
-        status: 'Active',
-        productsCount: 234,
-        parentCategory: null,
-        image: '/images/categories/fashion.jpg',
-        metaTitle: 'Fashion - Latest Trends and Styles',
-        metaDescription: 'Discover the latest fashion trends for men and women. Quality clothing and accessories.',
-        metaKeywords: 'fashion, clothing, shoes, accessories, trends',
-        sortOrder: 2,
-        createdAt: '2024-01-16T14:20:00Z',
-        updatedAt: '2024-01-18T09:15:00Z',
-        createdBy: 'Fashion Admin',
-        updatedBy: 'Fashion Admin'
-      }
-    ];
-
-    // Simulate API call
+    // Fetch category from API
     const fetchCategory = async () => {
       setLoading(true);
       try {
-        // Replace with actual API call
-        const foundCategory = mockCategoriesData.find(cat => cat.id === params.id);
-        setCategory(foundCategory);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = await getToken();
+        const response = await axios.get(`${baseUrl}/api/categories/${params.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          setCategory(response.data.data);
+        }
       } catch (error) {
-        console.error('Error fetching category:', error);
+        toast.error(error?.response?.data?.message || error.message || 'Failed to fetch category');
       } finally {
         setLoading(false);
       }
@@ -79,17 +51,38 @@ export default function CategoryDetailPage({ params }) {
     if (params.id) {
       fetchCategory();
     }
-  }, [params.id]);
+  }, [id]);
 
-  const handleToggleStatus = () => {
+  const handleToggleStatus = async () => {
     if (category) {
-      const newStatus = category.status === 'Active' ? 'Inactive' : 'Active';
-      setCategory(prev => ({
-        ...prev,
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      }));
-      // Here you would make an API call to update the status
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = await getToken();
+        const newStatus = category.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+        
+        const response = await axios.put(`${baseUrl}/api/categories/${category.id}`, {
+          status: newStatus
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.data.success) {
+          toast.success(`Category status updated to ${newStatus}`);
+          setCategory(prev => ({
+            ...prev,
+            status: newStatus,
+            updatedAt: new Date().toISOString()
+          }));
+        } else {
+          toast.error(response.data.message || 'Failed to update status');
+        }
+      } catch (error) {
+        toast.error(error?.response?.data?.message || error.message || 'Error updating status');
+        console.error('Error updating category status:', error?.response?.data?.message || error.message || 'Error updating status');
+      }
     }
   };
 
@@ -97,21 +90,37 @@ export default function CategoryDetailPage({ params }) {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
-    // Handle category deletion
-    console.log('Deleting category:', category.id);
-    setShowDeleteModal(false);
-    // Redirect to categories list after deletion
-    // router.push('/master/categories');
+  const confirmDelete = async () => {
+    setDeleting(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.delete(`${baseUrl}/api/categories/${category.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        toast.success('Category deleted successfully');
+        setShowDeleteModal(false);
+        // Redirect to categories list after deletion
+        window.location.href = '/master/categories';
+      } else {
+        toast.error(response.data.message || 'Failed to delete category');
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Error deleting category');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Active':
+      case 'ACTIVE':
         return 'bg-green-100 text-green-800';
-      case 'Inactive':
+      case 'INACTIVE':
         return 'bg-red-100 text-red-800';
-      case 'Draft':
+      case 'DRAFT':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -177,12 +186,12 @@ export default function CategoryDetailPage({ params }) {
             <button
               onClick={handleToggleStatus}
               className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
-                category.status === 'Active' 
-                  ? 'bg-red-600 hover:bg-red-700' 
+                category.status === 'ACTIVE'
+                  ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-green-600 hover:bg-green-700'
               }`}
             >
-              {category.status === 'Active' ? (
+              {category.status === 'ACTIVE' ? (
                 <>
                   <FiToggleRight className="mr-2 h-4 w-4" />
                   Deactivate
@@ -244,7 +253,7 @@ export default function CategoryDetailPage({ params }) {
                   <label className="text-sm font-medium text-gray-700">Products Count</label>
                   <p className="mt-1 text-sm text-gray-900 flex items-center">
                     <FiPackage className="mr-1 h-4 w-4 text-gray-400" />
-                    {category.productsCount} products
+                    {category.productsCount || 0} products
                   </p>
                 </div>
               </div>
@@ -266,7 +275,7 @@ export default function CategoryDetailPage({ params }) {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Created</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(category.createdAt).toLocaleString()} by {category.createdBy}
+                      {new Date(category.createdAt).toLocaleString()} by {category.createdBy || 'System'}
                     </p>
                   </div>
                 </div>
@@ -277,7 +286,7 @@ export default function CategoryDetailPage({ params }) {
                   <div>
                     <p className="text-sm font-medium text-gray-900">Last Updated</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(category.updatedAt).toLocaleString()} by {category.updatedBy}
+                      {new Date(category.updatedAt).toLocaleString()} by {category.updatedBy || 'System'}
                     </p>
                   </div>
                 </div>
@@ -333,9 +342,10 @@ export default function CategoryDetailPage({ params }) {
               <div className="items-center px-4 py-3">
                 <button
                   onClick={confirmDelete}
-                  className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-3 hover:bg-red-700"
+                  disabled={deleting}
+                  className={`px-4 py-2 text-white text-base font-medium rounded-md w-24 mr-3 hover:bg-red-700 ${deleting ? 'bg-red-400' : 'bg-red-600'}`}
                 >
-                  Delete
+                  {deleting ? 'Deleting...' : 'Delete'}
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(false)}

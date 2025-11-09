@@ -3,27 +3,16 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
-  FiTrendingUp, 
   FiUsers, 
   FiShoppingCart, 
-  FiDollarSign,
-  FiArrowUp,
-  FiArrowDown,
-  FiMoreVertical,
   FiFilter,
   FiCalendar,
-  FiClock,
-  FiMessageCircle,
   FiExternalLink,
   FiShoppingBag,
   FiStar,
-  FiBell,
   FiPackage,
-  FiEye,
-  FiGrid,
-  FiBarChart3,
-  FiActivity
 } from 'react-icons/fi';
+import CardAdmin from '@/components/master/CardAdmin';
 
 export default function MasterDashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState('7 days');
@@ -65,33 +54,6 @@ export default function MasterDashboard() {
     ];
     setRecentServices(mockServices);
   }, []);
-
-  const masterStats = [
-    {
-      title: 'Total Orders',
-      value: '3,847',
-      icon: FiShoppingCart,
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Total Products',
-      value: '2,156',
-      icon: FiPackage,
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Total Stores',
-      value: '156',
-      icon: FiShoppingBag,
-      color: 'bg-purple-500',
-    },
-    {
-      title: 'Total New Users',
-      value: '1,623',
-      icon: FiUsers,
-      color: 'bg-orange-500',
-    }
-  ];
 
   const bestProducts = [
     { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8, change: '+15.2%' },
@@ -144,7 +106,7 @@ export default function MasterDashboard() {
         </div>
       </div>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {masterStats.map((stat, index) => (
         <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
@@ -158,7 +120,8 @@ export default function MasterDashboard() {
           </div>
         </div>
       ))}
-    </div>
+    </div> */}
+    <CardAdmin />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
