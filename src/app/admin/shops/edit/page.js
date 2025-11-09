@@ -9,14 +9,15 @@ import {
   FiSave,
   FiX,
   FiCamera,
-  FiUpload,
   FiTrash2
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function EditShopPage({ params }) {
   const { getToken } = useAuth();
+  const router = useRouter();
   const [shopData, setShopData] = useState({
     name: '',
     ownerName: '',
@@ -158,7 +159,7 @@ export default function EditShopPage({ params }) {
 
       if (response.data.success) {
         toast.success('Shop information updated successfully!');
-        console.log('Shop updated:', response.data);
+        router.push(`/admin/shops`);
       } else {
         toast.error(response.data.message || 'Failed to update shop');
         console.error('API error:', response.data);
@@ -247,13 +248,6 @@ export default function EditShopPage({ params }) {
                 </label>
               </div>
               <div className="mt-4 space-y-2">
-                <button
-                  type="button"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  <FiUpload className="inline h-4 w-4 mr-2" />
-                  Upload Image
-                </button>
                 {imagePreview && (
                   <button
                     type="button"
