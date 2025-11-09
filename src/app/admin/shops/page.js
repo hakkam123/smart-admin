@@ -35,14 +35,13 @@ export default function ShopsPage() {
     statusReason: '',
     shopImage: '/api/placeholder/150/150',
     category: '',
-    establishedDate: '',
+    createdAt: '',
   });
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalSales: 0,
     reportsAgainst: 0,
     reportsMade: 0,
-    lastLogin: '',
     avgRating: 0,
     totalProducts: 0,
     activeProducts: 0
@@ -79,7 +78,7 @@ export default function ShopsPage() {
           statusReason: storeData.statusReason || '',
           shopImage: storeData.logo || '/api/placeholder/150/150',
           category: storeData.category?.name || 'General',
-          establishedDate: storeData.establishedDate ? new Date(storeData.establishedDate).toISOString().split('T')[0] : '',
+          createdAt: storeData.createdAt ? new Date(storeData.createdAt).toISOString().split('T')[0] : '',
         });
 
         // Set stats
@@ -88,7 +87,6 @@ export default function ShopsPage() {
           totalSales: storeData.totalSales || 0,
           reportsAgainst: 0, // API doesn't provide this info directly
           reportsMade: 0, // API doesn't provide this info directly
-          lastLogin: storeData.user?.lastLogin ? new Date(storeData.user.lastLogin).toLocaleDateString() : 'N/A',
           avgRating: storeData.avgRating || 0,
           totalProducts: storeData.totalProducts || 0,
           activeProducts: storeData.activeProducts || 0
@@ -197,14 +195,6 @@ export default function ShopsPage() {
             <div className="mt-6 space-y-4">
               <div className="text-sm">
                 <div className="flex items-center text-gray-600 mb-1">
-                  <FiClock className="h-4 w-4 mr-2" />
-                  Last Login
-                </div>
-                <p className="font-medium text-gray-900">{stats.lastLogin}</p>
-              </div>
-              
-              <div className="text-sm">
-                <div className="flex items-center text-gray-600 mb-1">
                   <FiShoppingBag className="h-4 w-4 mr-2" />
                   Total Orders
                 </div>
@@ -246,9 +236,6 @@ export default function ShopsPage() {
                 <span className="text-sm font-medium text-green-600">{stats.activeProducts}</span>
               </div>
             </div>
-            <button className="w-full mt-4 px-4 py-2 text-sm text-orange-600 border border-orange-600 rounded-md hover:bg-orange-50">
-              See Reports History
-            </button>
           </div>
         </div>
 
@@ -271,7 +258,7 @@ export default function ShopsPage() {
                 <p className="text-gray-900">{shopData.ownerName}</p>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                 <div className="flex items-center">
                   <FiMapPin className="h-4 w-4 text-gray-400 mr-2" />
@@ -295,7 +282,7 @@ export default function ShopsPage() {
                 </div>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
                 <div className="flex items-center">
                   <FiGlobe className="h-4 w-4 text-gray-400 mr-2" />
@@ -325,7 +312,7 @@ export default function ShopsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Established Date</label>
                 <div className="flex items-center">
                   <FiCalendar className="h-4 w-4 text-gray-400 mr-2" />
-                  <p className="text-gray-900">{new Date(shopData.establishedDate).toLocaleDateString()}</p>
+                  <p className="text-gray-900">{new Date(shopData.createdAt).toLocaleDateString()}</p>
                 </div>
               </div>
             </div>
