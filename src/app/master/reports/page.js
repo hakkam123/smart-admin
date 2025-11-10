@@ -300,7 +300,7 @@ export default function ReportsManagementPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
+                className="block w-full pl-10 pr-10 py-2 border text-gray-500 border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
               >
                 <option value="all">All Types</option>
                 <option value="shop">Shop Reports</option>
@@ -316,20 +316,13 @@ export default function ReportsManagementPage() {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
+                className="block w-full pl-10 pr-10 py-2 border text-gray-500 border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
               >
                 <option value="all">All Priority</option>
                 <option value="high">High Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="low">Low Priority</option>
               </select>
-            </div>
-
-            {/* Results Count */}
-            <div className="flex items-center justify-end">
-              <span className="text-sm text-gray-500">
-                Showing {filteredReports.length} of {reports.length} reports
-              </span>
             </div>
           </div>
         </div>

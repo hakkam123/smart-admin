@@ -477,31 +477,6 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             </div>
-
-            {/* SEO Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
-                  <p className="text-sm text-gray-900">{productData.metaTitle}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                  <p className="text-sm text-gray-700">{productData.metaDescription}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                  <div className="flex flex-wrap gap-1">
-                    {productData.tags.split(', ').map((tag, index) => (
-                      <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </form>

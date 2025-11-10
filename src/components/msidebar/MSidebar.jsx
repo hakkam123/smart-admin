@@ -55,7 +55,7 @@ const MasterSidebar = () => {
       title: 'BUSINESS OPERATIONS',
       items: [
         { name: 'Orders', icon: FiShoppingCart, href: '/master/orders' },
-        { name: 'Shops', icon: FiShoppingBag, href: '/master/shops' },
+        { name: 'Stores', icon: FiShoppingBag, href: '/master/stores' },
         { name: 'Users', icon: FiUsers, href: '/master/users', isNew: true },
       ]
     },

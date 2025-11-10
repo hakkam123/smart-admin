@@ -462,30 +462,6 @@ export default function OrdersManagementPage() {
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
-
-            {/* Shop Filter */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiShoppingBag className="h-5 w-5 text-gray-400" />
-              </div>
-              <select
-                value={shopFilter}
-                onChange={(e) => setShopFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
-              >
-                <option value="all">All Shops</option>
-                {getUniqueShops().map((shop) => (
-                  <option key={shop.id} value={shop.id}>{shop.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Results Count */}
-            <div className="flex items-center justify-end">
-              <span className="text-sm text-gray-500">
-                Showing {filteredOrders.length} of {orders.length} orders
-              </span>
-            </div>
           </div>
         </div>
       </div>
