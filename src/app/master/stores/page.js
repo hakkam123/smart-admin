@@ -34,7 +34,7 @@ export default function ShopsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); 
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all', 'active', 'inactive'
+  const [activeFilter, setActiveFilter] = useState('all'); 
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
   const [actionType, setActionType] = useState('');
@@ -185,16 +185,13 @@ export default function ShopsManagementPage() {
         }
       });
       
-      // Remove from pending list after successful action
       setShops(prevShops =>
         prevShops.filter(shop => shop.id !== selectedShop.id)
       );
       
-      // Success - no alert needed
       
     } catch (error) {
       console.error('Error updating shop status:', error);
-      // Could add toast notification here instead of alert
     }
 
     setShowApprovalModal(false);
@@ -217,7 +214,6 @@ export default function ShopsManagementPage() {
         }
       });
       
-      // Update shop status in local state
       setShops(prevShops =>
         prevShops.map(s =>
           s.id === shop.id
@@ -226,11 +222,8 @@ export default function ShopsManagementPage() {
         )
       );
       
-      // Success - no alert needed
-      
     } catch (error) {
       console.error('Error toggling shop status:', error);
-      // Could add toast notification here instead of alert
     }
   };
 
@@ -355,9 +348,8 @@ export default function ShopsManagementPage() {
             <button
               onClick={fetchShops}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <FiRefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>
@@ -376,7 +368,7 @@ export default function ShopsManagementPage() {
             placeholder="Cari nama toko..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border ml-3 border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-2 text-[12px] border ml-3 border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
@@ -388,7 +380,7 @@ export default function ShopsManagementPage() {
               setStatusFilter(e.target.value);
               setActiveFilter('all');
             }}
-            className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="appearance-none bg-white border text-[12px] border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>

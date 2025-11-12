@@ -13,7 +13,6 @@ import {
   FiPackage,
   FiUser,
   FiCalendar,
-  FiRefreshCw,
   FiClock,
   FiCheckCircle,
   FiXCircle,
@@ -27,7 +26,6 @@ export default function ReportsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
 
   useEffect(() => {
     // Mock reports data - replace with actual API call
@@ -165,13 +163,8 @@ export default function ReportsManagementPage() {
       filtered = filtered.filter(report => report.reportType === typeFilter);
     }
 
-    // Filter by priority
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter(report => report.priority === priorityFilter);
-    }
-
     setFilteredReports(filtered);
-  }, [reports, searchTerm, typeFilter, priorityFilter]);
+  }, [reports, searchTerm, typeFilter]);
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -264,9 +257,8 @@ export default function ReportsManagementPage() {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => window.location.reload()}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <FiRefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </button>
           </div>
@@ -277,7 +269,7 @@ export default function ReportsManagementPage() {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Search */}
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -307,23 +299,6 @@ export default function ReportsManagementPage() {
                 <option value="product">Product Reports</option>
               </select>
             </div>
-
-            {/* Priority Filter */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiFlag className="h-5 w-5 text-gray-400" />
-              </div>
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border text-gray-500 border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
-              >
-                <option value="all">All Priority</option>
-                <option value="high">High Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="low">Low Priority</option>
-              </select>
-            </div>
           </div>
         </div>
       </div>
@@ -342,9 +317,6 @@ export default function ReportsManagementPage() {
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Target
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Priority
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -403,11 +375,6 @@ export default function ReportsManagementPage() {
                     <div className="text-sm text-gray-500 capitalize">{report.reportType}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(report.priority)}`}>
-                      {report.priority}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
                       {getStatusIcon(report.status)}
                       <span className="ml-1">{report.status}</span>
@@ -440,7 +407,7 @@ export default function ReportsManagementPage() {
             <FiAlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No reports found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || typeFilter !== 'all' || priorityFilter !== 'all'
+              {searchTerm || typeFilter !== 'all'
                 ? 'Try adjusting your search or filter criteria.'
                 : 'No reports have been submitted yet.'
               }

@@ -16,8 +16,7 @@ import {
   FiCalendar,
   FiUserCheck,
   FiUserX,
-  FiShield,
-  FiRefreshCw
+  FiShield
 } from 'react-icons/fi';
 
 export default function UsersManagementPage() {
@@ -123,9 +122,8 @@ export default function UsersManagementPage() {
             <button
               onClick={fetchUsers}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <FiRefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>

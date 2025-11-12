@@ -3,32 +3,28 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
+import { useAuth } from '@clerk/nextjs';
+import {
   FiArrowLeft,
-  FiSave,
-  FiX,
   FiUpload,
   FiImage,
-  FiTag,
-  FiType,
-  FiFileText,
-  FiToggleLeft,
-  FiToggleRight,
-  FiLink
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function AddCategoryPage() {
   const router = useRouter();
+  const { getToken } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: '',
+    image: '', // URL for preview
+    imageFile: null, // Actual file object
     status: 'active',
     slug: '',
     metaTitle: '',
     metaDescription: '',
-    sortOrder: 0,
     parentCategory: ''
   });
 
@@ -53,21 +49,62 @@ export default function AddCategoryPage() {
     }));
   };
 
+  const handleImageFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      
+      setFormData(prev => ({
+        ...prev,
+        image: previewUrl,
+        imageFile: file
+      }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
       
-      // In real app, you would make an API call here
-      console.log('New Category Data:', formData);
+      // Prepare form data for API request
+      const categoryData = new FormData();
+      categoryData.append('name', formData.name);
+      categoryData.append('description', formData.description);
+      categoryData.append('status', formData.status);
+      categoryData.append('slug', formData.slug);
+      categoryData.append('metaTitle', formData.metaTitle);
+      categoryData.append('metaDescription', formData.metaDescription);
       
-      // Redirect back to categories list
-      router.push('/master/categories');
+      // Add image if provided as File object
+      if (formData.imageFile) {
+        categoryData.append('image', formData.imageFile);
+      }
+      
+      // Add parent category if selected
+      if (formData.parentCategory) {
+        categoryData.append('parentCategoryId', formData.parentCategory);
+      }
+
+      const response = await axios.post(`${baseUrl}/api/categories`, categoryData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        toast.success('Category created successfully');
+        router.push('/master/categories');
+      } else {
+        toast.error(response.data.message || 'Failed to create category');
+      }
     } catch (error) {
-      console.error('Error creating category:', error);
+      toast.error(error?.response?.data?.message || error.message || 'Error creating category');
     } finally {
       setLoading(false);
     }
@@ -86,8 +123,8 @@ export default function AddCategoryPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link 
-            href="/master/categories" 
+          <Link
+            href="/master/categories"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <FiArrowLeft className="w-5 h-5 text-gray-600" />
@@ -97,7 +134,7 @@ export default function AddCategoryPage() {
             <p className="text-gray-600">Create a new product category</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <Link
             href="/master/categories"
@@ -123,7 +160,7 @@ export default function AddCategoryPage() {
             <div className="flex items-center gap-2 mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
             </div>
-            
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -185,20 +222,6 @@ export default function AddCategoryPage() {
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Image URL
-                </label>
-                <input
-                  type="url"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                  placeholder="https://example.com/image.jpg"
-                />
-              </div>
-
               {/* Image Upload Area */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
                 <div className="space-y-4">
@@ -211,22 +234,34 @@ export default function AddCategoryPage() {
                     </p>
                     <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
                   </div>
-                  <button
-                    type="button"
-                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                  <label
+                    htmlFor="image-upload"
+                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <FiImage className="w-4 h-4 mr-2" />
                     Choose File
-                  </button>
+                  </label>
+                  <input
+                    id="image-upload"
+                    name="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    className="hidden"
+                  />
                 </div>
               </div>
 
               {/* Image Preview */}
               {formData.image && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Preview URL</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Image Preview</p>
                   <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-sm text-gray-600 break-all">{formData.image}</p>
+                    <img 
+                      src={formData.image} 
+                      alt="Preview" 
+                      className="max-h-40 rounded object-contain"
+                    />
                   </div>
                 </div>
               )}
@@ -241,7 +276,7 @@ export default function AddCategoryPage() {
           {/* Category Status */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Category Status</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -279,7 +314,7 @@ export default function AddCategoryPage() {
           {/* Quick Actions */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
-            
+
             <div className="space-y-3">
               <button
                 type="button"

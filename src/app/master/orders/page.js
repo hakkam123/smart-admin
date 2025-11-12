@@ -16,7 +16,6 @@ import {
   FiAlertCircle,
   FiDollarSign,
   FiCalendar,
-  FiRefreshCw,
   FiDownload,
   FiShoppingBag,
   FiUser,
@@ -413,13 +412,11 @@ export default function OrdersManagementPage() {
             <button
               onClick={refreshData}
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <FiRefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Refresh
             </button>
-            <button className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-              <FiDownload className="mr-2 h-4 w-4" />
+            <button className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors">
               Export
             </button>
           </div>
