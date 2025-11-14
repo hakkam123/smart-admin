@@ -155,6 +155,15 @@ export default function OrderDetailPage({ params }) {
     }
   };
 
+  // Frontend canonical descriptions for statuses (render-only)
+  const statusDescriptions = {
+    ORDER_PLACED: 'Order placed by customer',
+    PROCESSING: 'Order is being prepared by shop',
+    SHIPPED: 'Order has been shipped',
+    DELIVERED: 'Order delivered to customer',
+    CANCELLED: 'Order was cancelled',
+  };
+
   const getPaymentStatusColor = (status) => {
     switch (status) {
       case 'paid' :
@@ -416,11 +425,15 @@ export default function OrderDetailPage({ params }) {
                           </div>
                           <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                             <div>
-                              <p className="text-sm text-gray-500">{item.description}</p>
+                              <p className="text-sm text-gray-500">{statusDescriptions[item.status] || item.description || ''}</p>
                             </div>
                             <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                              <time dateTime={item.timestamp}>
-                                {new Date(item.timestamp).toLocaleString()}
+                              <time dateTime={item.createdAt}>
+                                {(() => {
+                                  const d = new Date(item.createdAt);
+                                  if (isNaN(d)) return '';
+                                  return d.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
+                                })()}
                               </time>
                             </div>
                           </div>
