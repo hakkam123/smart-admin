@@ -279,35 +279,6 @@ export default function ShopsPage() {
             </div>
           </div>
 
-          {/* Business Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Business Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                <p className="text-gray-900">{shopData.category}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Established Date</label>
-                <div className="flex items-center">
-                  <FiCalendar className="h-4 w-4 text-gray-400 mr-2" />
-                  <p className="text-gray-900">{new Date(shopData.establishedDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business License</label>
-                <p className="text-gray-900">{shopData.businessLicense}</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID</label>
-                <p className="text-gray-900">{shopData.taxId}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Status Management */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Status Management</h2>

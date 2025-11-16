@@ -22,38 +22,28 @@ export default function ReportsPage() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Sample complaint reports data
   const complaintStats = [
     {
       title: 'Total Reports',
       value: '156',
-      change: '+12',
-      period: 'this month',
       icon: FiAlertTriangle,
       color: 'bg-red-500'
     },
     {
       title: 'Pending',
       value: '23',
-      change: '+5',
-      period: 'today',
       icon: FiClock,
       color: 'bg-yellow-500'
     },
     {
       title: 'Resolved',
       value: '98',
-      change: '+18',
-      period: 'this week',
       icon: FiCheckCircle,
       color: 'bg-green-500'
     },
     {
       title: 'High Priority',
       value: '8',
-      change: '+2',
-      period: 'today',
       icon: FiAlertCircle,
       color: 'bg-orange-500'
     }
@@ -217,7 +207,6 @@ export default function ReportsPage() {
         </div>
         <div className="flex space-x-3">
           <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-            <FiCalendar className="mr-2 h-4 w-4" />
             Date Range
           </button>
         </div>

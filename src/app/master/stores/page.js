@@ -232,13 +232,6 @@ export default function ShopsManagementPage() {
       case 'pending':
         return (
           <div className="flex items-center space-x-2">
-            <Link 
-              href={`/master/shops/${shop.id}`}
-              className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-              title="View Shop Details"
-            >
-              <FiEye className="h-4 w-4" />
-            </Link>
             <button
               onClick={() => handleApprove(shop)}
               className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
@@ -258,14 +251,7 @@ export default function ShopsManagementPage() {
       case 'approved':
         return (
           <div className="flex items-center space-x-3">
-            <Link 
-              href={`/master/shops/${shop.id}`}
-              className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-              title="View Shop Details"
-            >
-              <FiEye className="h-4 w-4" />
-            </Link>
-            
+           
             {/* Toggle Switch */}
             <button
               onClick={() => toggleStoreStatus(shop)}
@@ -283,16 +269,6 @@ export default function ShopsManagementPage() {
               />
             </button>
           </div>
-        );
-      default:
-        return (
-          <Link 
-            href={`/master/shops/${shop.id}`}
-            className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-            title="View Shop Details"
-          >
-            <FiEye className="h-4 w-4" />
-          </Link>
         );
     }
   };
@@ -336,7 +312,24 @@ export default function ShopsManagementPage() {
   }
 
   return (
-    <div className="p-6">
+    <>
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideDown {
+          from { 
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          to { 
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+      <div className="p-6">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between">
@@ -512,8 +505,18 @@ export default function ShopsManagementPage() {
 
       {/* Approval/Decline Modal */}
       {showApprovalModal && selectedShop && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="relative mx-auto bg-white rounded-2xl shadow-xl max-w-md w-full">
+        <div 
+          className="fixed inset-0 bg-white bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-start justify-center pt-16 p-4"
+          style={{ 
+            animation: 'fadeIn 0.3s ease-out'
+          }}
+        >
+          <div 
+            className="relative mx-auto bg-white rounded-2xl shadow-2xl border border-gray-200 max-w-md w-full"
+            style={{
+              animation: 'slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+            }}
+          >
             <button
               onClick={() => {
                 setShowApprovalModal(false);
@@ -634,5 +637,6 @@ export default function ShopsManagementPage() {
         </div>
       )}
     </div>
+    </>
   );
 }

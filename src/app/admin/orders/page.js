@@ -32,32 +32,24 @@ export default function OrdersPage() {
     {
       title: 'Total Orders',
       value: '2,350',
-      change: '+12.5%',
-      period: 'vs last month',
       icon: FiShoppingCart,
       color: 'bg-blue-500'
     },
     {
       title: 'Pending Orders',
       value: '45',
-      change: '+5',
-      period: 'today',
       icon: FiClock,
       color: 'bg-yellow-500'
     },
     {
       title: 'Completed Orders',
       value: '2,156',
-      change: '+18.2%',
-      period: 'this month',
       icon: FiCheckCircle,
       color: 'bg-green-500'
     },
     {
       title: 'Revenue',
       value: 'Rp 45,231,890',
-      change: '+20.1%',
-      period: 'this month',
       icon: FiDollarSign,
       color: 'bg-purple-500'
     }
@@ -346,12 +338,11 @@ export default function OrdersPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="block w-40 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="block w-40 px-3 py-2 text-sm border border-gray-300 text-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
                 <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
@@ -364,7 +355,7 @@ export default function OrdersPage() {
                   placeholder="Search Order"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 w-64 text-sm border text-gray-600 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
               </div>
             </div>

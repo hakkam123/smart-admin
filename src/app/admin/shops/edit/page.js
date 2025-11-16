@@ -5,8 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   FiArrowLeft,
-  FiSave,
-  FiX,
   FiUser,
   FiMail,
   FiPhone,
@@ -211,17 +209,10 @@ export default function EditShopPage({ params }) {
 
     setLoading(true);
     try {
-      // Simulate API call - replace with real API
       console.log('Saving shop data:', shopData);
-      
-      // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Show success message (you can add toast notification here)
       alert('Shop information updated successfully!');
       
-      // Redirect back to shops list or shop view
-      // router.push('/admin/shops');
     } catch (error) {
       console.error('Error saving shop data:', error);
       alert('Error saving shop data. Please try again.');
@@ -258,35 +249,28 @@ export default function EditShopPage({ params }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Link 
-            href="/admin/shops"
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
-          >
-            <FiArrowLeft className="h-5 w-5" />
-          </Link>
+
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {params?.id ? 'Edit Shop' : 'Add New Shop'}
+              {params?.id ? 'Edit Shop' : 'Edit Shop'}
             </h1>
             <p className="text-gray-600">
-              {params?.id ? 'Update shop information and settings' : 'Create a new online shop profile'}
+              {params?.id ? 'Update shop information and settings' : 'Update shop information and settings'}
             </p>
           </div>
         </div>
         <div className="flex space-x-3">
           <Link
             href="/admin/shops"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
-            <FiX className="mr-2 h-4 w-4" />
             Cancel
           </Link>
           <button 
             onClick={handleSave}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
           >
-            <FiSave className="mr-2 h-4 w-4" />
             {loading ? 'Saving...' : 'Save Shop'}
           </button>
         </div>
@@ -321,7 +305,7 @@ export default function EditShopPage({ params }) {
               <div className="mt-4 space-y-2">
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="w-full px-3 py-2 text-sm border text-gray-600 border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   <FiUpload className="inline h-4 w-4 mr-2" />
                   Upload Image
@@ -343,29 +327,6 @@ export default function EditShopPage({ params }) {
             </div>
           </div>
 
-          {/* Shop Preview */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
-            <div className="text-center">
-              <h4 className="font-medium text-gray-900">{shopData.name || 'Shop Name'}</h4>
-              <p className="text-gray-600 text-sm">{shopData.ownerName || 'Owner Name'}</p>
-              <div className="mt-2">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(shopData.status)}`}>
-                  {shopData.status}
-                </span>
-              </div>
-              <div className="mt-4 text-sm text-gray-600">
-                <p className="flex items-center justify-center">
-                  <FiMapPin className="h-4 w-4 mr-1" />
-                  {shopData.address || 'Address'}
-                </p>
-                <p className="flex items-center justify-center mt-1">
-                  <FiMail className="h-4 w-4 mr-1" />
-                  {shopData.email || 'Email'}
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Main Content */}
@@ -489,7 +450,7 @@ export default function EditShopPage({ params }) {
                 <select
                   value={shopData.category}
                   onChange={(e) => handleInputChange('category', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2 border rounded-md text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     errors.category ? 'border-red-300' : 'border-gray-300'
                   }`}
                 >
@@ -515,7 +476,7 @@ export default function EditShopPage({ params }) {
                   type="date"
                   value={shopData.establishedDate}
                   onChange={(e) => handleInputChange('establishedDate', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                  className={`w-full px-3 py-2 border rounded-md text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     errors.establishedDate ? 'border-red-300' : 'border-gray-300'
                   }`}
                 />
@@ -528,7 +489,7 @@ export default function EditShopPage({ params }) {
                   type="text"
                   value={shopData.businessLicense}
                   onChange={(e) => handleInputChange('businessLicense', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter business license number"
                 />
               </div>
@@ -539,7 +500,7 @@ export default function EditShopPage({ params }) {
                   type="text"
                   value={shopData.taxId}
                   onChange={(e) => handleInputChange('taxId', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   placeholder="Enter tax identification number"
                 />
               </div>
@@ -547,7 +508,7 @@ export default function EditShopPage({ params }) {
           </div>
 
           {/* Business Hours */}
-          <div className="bg-white rounded-lg shadow p-6">
+          {/* <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Business Hours</h2>
             <div className="space-y-4">
               {Object.entries(shopData.businessHours).map(([day, hours]) => (
@@ -584,7 +545,7 @@ export default function EditShopPage({ params }) {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
 
           {/* Status Management */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -599,20 +560,7 @@ export default function EditShopPage({ params }) {
                 >
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
-                  <option value="suspended">Suspended</option>
-                  <option value="pending">Pending Review</option>
                 </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status Change Reason</label>
-                <textarea
-                  value={shopData.statusReason}
-                  onChange={(e) => handleInputChange('statusReason', e.target.value)}
-                  placeholder="Provide reason for status change..."
-                  rows={3}
-                  className="w-full px-3 py-2 border text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                />
               </div>
             </div>
           </div>

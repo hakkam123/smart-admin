@@ -6,22 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { 
   FiArrowLeft,
-  FiEdit,
-  FiSave,
   FiUpload,
-  FiUser,
-  FiMapPin,
-  FiPhone,
-  FiMail,
-  FiPackage,
-  FiTruck,
   FiCheckCircle,
-  FiClock,
-  FiAlertCircle,
-  FiCamera,
-  FiDownload,
-  FiPrinter,
-  FiMessageSquare
+  FiClock
 } from 'react-icons/fi';
 
 export default function OrderDetailPage() {
@@ -187,24 +174,13 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center text-sm text-gray-500">
-          <Link href="/admin" className="hover:text-gray-700">Home</Link>
-          <span className="mx-2">&gt;</span>
-          <Link href="/admin/orders" className="hover:text-gray-700">Order</Link>
-          <span className="mx-2">&gt;</span>
-          <span className="text-gray-900">Show Order</span>
-        </div>
-      </nav>
-
       <div className="flex h-full">
         {/* Sidebar - Quick Messages */}
         <div className="w-80 bg-white border-r border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
             <button 
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-100 text-gray-600 rounded-lg"
             >
               <FiArrowLeft size={20} />
             </button>
@@ -233,7 +209,6 @@ export default function OrderDetailPage() {
           </div>
 
           <button className="w-full mt-6 flex items-center justify-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-            <FiMessageSquare className="mr-2" size={16} />
             Send Message
           </button>
         </div>

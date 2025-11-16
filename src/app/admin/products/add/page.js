@@ -7,15 +7,10 @@ import {
   FiUpload, 
   FiX,
   FiArrowLeft,
-  FiSave,
   FiImage,
   FiPlus,
   FiMinus,
-  FiInfo,
-  FiTruck,
-  FiDollarSign,
-  FiPackage,
-  FiShield
+  FiInfo
 } from 'react-icons/fi';
 
 export default function AddProductPage() {
@@ -524,7 +519,6 @@ export default function AddProductPage() {
               type="submit"
               className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"
             >
-              <FiSave className="w-4 h-4" />
               Simpan
             </button>
           </div>

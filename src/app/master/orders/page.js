@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -31,236 +33,78 @@ export default function OrdersManagementPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [shopFilter, setShopFilter] = useState('all');
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
-    // Mock orders data - replace with actual API call
-    const mockOrdersData = [
-      {
-        id: 'ORD-2024-001',
-        orderNumber: '#ORD001',
-        customer: {
-          name: 'John Doe',
-          email: 'john.doe@example.com',
-          phone: '+62 812-3456-7890',
-          address: 'Jl. Sudirman No. 123, Jakarta Pusat'
-        },
-        shop: {
-          id: 'SHP001',
-          name: 'Tech Store Jakarta',
-          owner: 'Ahmad Wijaya',
-          phone: '+62 811-2233-4455'
-        },
-        products: [
-          {
-            id: 'PRD001',
-            name: 'iPhone 15 Pro Max',
-            image: '/images/products/iphone15.jpg',
-            price: 18999000,
-            quantity: 1,
-            variant: '256GB Natural Titanium'
-          },
-          {
-            id: 'PRD002',
-            name: 'AirPods Pro 2',
-            image: '/images/products/airpods.jpg',
-            price: 3999000,
-            quantity: 1,
-            variant: 'White'
-          }
-        ],
-        status: 'processing',
-        paymentStatus: 'paid',
-        paymentMethod: 'Credit Card',
-        totalAmount: 22998000,
-        shippingFee: 15000,
-        discount: 100000,
-        finalAmount: 22913000,
-        orderDate: '2024-11-02T09:30:00Z',
-        estimatedDelivery: '2024-11-05T17:00:00Z',
-        trackingNumber: 'JNE123456789',
-        shippingMethod: 'JNE Regular',
-        notes: 'Tolong kirim bubble wrap extra untuk iPhone'
-      },
-      {
-        id: 'ORD-2024-002',
-        orderNumber: '#ORD002',
-        customer: {
-          name: 'Jane Smith',
-          email: 'jane.smith@company.com',
-          phone: '+62 813-9876-5432',
-          address: 'Jl. Braga No. 45, Bandung, Jawa Barat'
-        },
-        shop: {
-          id: 'SHP002',
-          name: 'Fashion Paradise',
-          owner: 'Sari Indah',
-          phone: '+62 812-5566-7788'
-        },
-        products: [
-          {
-            id: 'PRD003',
-            name: 'Dress Casual Wanita',
-            image: '/images/products/dress.jpg',
-            price: 299000,
-            quantity: 2,
-            variant: 'Size M, Navy Blue'
-          }
-        ],
-        status: 'shipped',
-        paymentStatus: 'paid',
-        paymentMethod: 'Bank Transfer',
-        totalAmount: 598000,
-        shippingFee: 12000,
-        discount: 0,
-        finalAmount: 610000,
-        orderDate: '2024-11-01T14:15:00Z',
-        estimatedDelivery: '2024-11-04T16:00:00Z',
-        trackingNumber: 'SICEPAT987654321',
-        shippingMethod: 'SiCepat Regular',
-        notes: null
-      },
-      {
-        id: 'ORD-2024-003',
-        orderNumber: '#ORD003',
-        customer: {
-          name: 'Michael Chen',
-          email: 'michael.chen@email.com',
-          phone: '+62 816-9999-0000',
-          address: 'Jl. Malioboro No. 89, Yogyakarta'
-        },
-        shop: {
-          id: 'SHP003',
-          name: 'Book Corner',
-          owner: 'Dewi Sartika',
-          phone: '+62 815-3344-5566'
-        },
-        products: [
-          {
-            id: 'PRD004',
-            name: 'Clean Code Book',
-            image: '/images/products/book-clean-code.jpg',
-            price: 180000,
-            quantity: 1,
-            variant: 'Paperback English'
-          },
-          {
-            id: 'PRD005',
-            name: 'JavaScript Complete Guide',
-            image: '/images/products/book-js.jpg',
-            price: 250000,
-            quantity: 1,
-            variant: 'Paperback Indonesian'
-          }
-        ],
-        status: 'delivered',
-        paymentStatus: 'paid',
-        paymentMethod: 'E-Wallet (OVO)',
-        totalAmount: 430000,
-        shippingFee: 10000,
-        discount: 43000,
-        finalAmount: 397000,
-        orderDate: '2024-10-30T11:45:00Z',
-        estimatedDelivery: '2024-11-02T15:00:00Z',
-        trackingNumber: 'POS123987456',
-        shippingMethod: 'Pos Indonesia',
-        notes: null
-      },
-      {
-        id: 'ORD-2024-004',
-        orderNumber: '#ORD004',
-        customer: {
-          name: 'Sarah Wilson',
-          email: 'sarah.wilson@tech.com',
-          phone: '+62 815-7777-8888',
-          address: 'Jl. Gajah Mada No. 67, Medan'
-        },
-        shop: {
-          id: 'SHP001',
-          name: 'Tech Store Jakarta',
-          owner: 'Ahmad Wijaya',
-          phone: '+62 811-2233-4455'
-        },
-        products: [
-          {
-            id: 'PRD006',
-            name: 'Samsung Galaxy S24 Ultra',
-            image: '/images/products/samsung-s24.jpg',
-            price: 16999000,
-            quantity: 1,
-            variant: '512GB Titanium Black'
-          }
-        ],
-        status: 'pending',
-        paymentStatus: 'pending',
-        paymentMethod: 'Bank Transfer',
-        totalAmount: 16999000,
-        shippingFee: 25000,
-        discount: 0,
-        finalAmount: 17024000,
-        orderDate: '2024-11-02T16:20:00Z',
-        estimatedDelivery: '2024-11-06T17:00:00Z',
-        trackingNumber: null,
-        shippingMethod: 'JNE YES',
-        notes: 'Pembayaran dalam proses verifikasi'
-      },
-      {
-        id: 'ORD-2024-005',
-        orderNumber: '#ORD005',
-        customer: {
-          name: 'Ahmad Rahman',
-          email: 'ahmad.rahman@gmail.com',
-          phone: '+62 814-5555-1234',
-          address: 'Jl. Pemuda No. 78, Surabaya'
-        },
-        shop: {
-          id: 'SHP004',
-          name: 'Sports Equipment',
-          owner: 'Budi Santoso',
-          phone: '+62 817-6677-8899'
-        },
-        products: [
-          {
-            id: 'PRD007',
-            name: 'Sepatu Running Nike',
-            image: '/images/products/nike-shoes.jpg',
-            price: 1299000,
-            quantity: 1,
-            variant: 'Size 42, Black White'
-          }
-        ],
-        status: 'cancelled',
-        paymentStatus: 'refunded',
-        paymentMethod: 'Credit Card',
-        totalAmount: 1299000,
-        shippingFee: 15000,
-        discount: 0,
-        finalAmount: 1314000,
-        orderDate: '2024-11-01T10:30:00Z',
-        estimatedDelivery: null,
-        trackingNumber: null,
-        shippingMethod: 'JNE Regular',
-        notes: 'Dibatalkan karena stok kosong'
-      }
-    ];
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
-    // Simulate API call
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        // Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        setOrders(mockOrdersData);
-        setFilteredOrders(mockOrdersData);
-        setLastUpdated(new Date());
+        const headers = {};
+        if (getToken) {
+          try {
+            const token = await getToken();
+            if (token) headers.Authorization = `Bearer ${token}`;
+          } catch (err) {
+            console.warn('Failed to get Clerk token', err);
+          }
+        }
+
+  const res = await axios.get(`${API_BASE}/api/admin/orders`, { headers });
+        if (res.data && res.data.orders) {
+          const serverOrders = res.data.orders.map(o => ({
+            id: o.id,
+            orderNumber: `#${o.id}`,
+            customer: {
+              name: o.user?.name || 'User',
+              email: o.user?.email || '',
+              phone: o.address?.phone || '',
+              address: o.address ? `${o.address.street}, ${o.address.city}` : ''
+            },
+            shop: {
+              id: o.storeId,
+              name: o.store?.name || `Store ${o.storeId}`,
+            },
+            products: o.orderItems ? o.orderItems.map(it => ({
+              id: it.product?.id || it.productId,
+              name: it.product?.name || '',
+              image: it.product?.images?.[0] || '',
+              price: it.price,
+              quantity: it.quantity,
+            })) : [],
+            status: o.status || 'pending',
+            paymentStatus: o.isPaid ? 'paid' : 'pending',
+            paymentMethod: o.paymentMethod,
+            totalAmount: o.total,
+            shippingFee: 0,
+            discount: 0,
+            finalAmount: o.total,
+            orderDate: o.createdAt,
+            estimatedDelivery: null,
+            trackingNumber: null,
+            shippingMethod: null,
+            notes: null
+          }));
+
+          setOrders(serverOrders);
+          setFilteredOrders(serverOrders);
+          setLastUpdated(new Date());
+        } else {
+          console.warn('Unexpected orders response', res.data);
+        }
       } catch (error) {
         console.error('Error fetching orders:', error);
+        // fallback: keep empty or show message
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
-  }, []);
+  fetchOrders();
+  }, [getToken, isSignedIn]);
 
   useEffect(() => {
     let filtered = orders;
@@ -268,11 +112,11 @@ export default function OrdersManagementPage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(order =>
-        order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.products.some(product => 
-          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.store?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.order_items?.some(item => 
+          item.product?.name?.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     }
@@ -284,23 +128,24 @@ export default function OrdersManagementPage() {
 
     // Filter by shop
     if (shopFilter !== 'all') {
-      filtered = filtered.filter(order => order.shop.id === shopFilter);
+      filtered = filtered.filter(order => order.store?.id === shopFilter);
     }
 
     setFilteredOrders(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [orders, searchTerm, statusFilter, shopFilter]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending':
+      case 'ORDER_PLACED':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'PROCESSING':
         return 'bg-blue-100 text-blue-800';
-      case 'shipped':
+      case 'SHIPPED':
         return 'bg-purple-100 text-purple-800';
-      case 'delivered':
+      case  'DELIVERED':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -309,15 +154,15 @@ export default function OrdersManagementPage() {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'pending':
+      case 'ORDER_PLACED':
         return <FiClock className="h-4 w-4" />;
-      case 'processing':
+      case 'PROCESSING':
         return <FiPackage className="h-4 w-4" />;
-      case 'shipped':
+      case 'SHIPPED':
         return <FiTruck className="h-4 w-4" />;
-      case 'delivered':
+      case 'DELIVERED':
         return <FiCheckCircle className="h-4 w-4" />;
-      case 'cancelled':
+      case 'CANCELLED':
         return <FiXCircle className="h-4 w-4" />;
       default:
         return <FiShoppingCart className="h-4 w-4" />;
@@ -355,12 +200,35 @@ export default function OrdersManagementPage() {
   };
 
   const refreshData = () => {
-    setLoading(true);
-    // Simulate refresh
-    setTimeout(() => {
-      setLastUpdated(new Date());
-      setLoading(false);
-    }, 1000);
+    fetchOrders();
+  };
+
+  // Calculate statistics
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
+  const pendingOrders = orders.filter(order => order.status === 'pending').length;
+  const completedOrders = orders.filter(order => order.status === 'delivered').length;
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   if (loading) {
@@ -426,9 +294,9 @@ export default function OrdersManagementPage() {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="relative">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Search - Full width */}
+            <div className="relative flex-1">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiSearch className="h-5 w-5 text-gray-400" />
               </div>
@@ -441,23 +309,26 @@ export default function OrdersManagementPage() {
               />
             </div>
 
-            {/* Status Filter */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiFilter className="h-5 w-5 text-gray-400" />
+            {/* Filters on the right */}
+            <div className="flex gap-3">
+              {/* Status Filter */}
+              <div className="relative min-w-[150px]">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiFilter className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="block w-full text-gray-600 pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
               </div>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
             </div>
           </div>
         </div>
@@ -496,7 +367,18 @@ export default function OrdersManagementPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
+              {paginatedOrders.length === 0 ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <FiShoppingCart className="h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                      <p className="text-gray-500">No orders match your current filters.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -624,63 +506,85 @@ export default function OrdersManagementPage() {
                     </Link>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Empty State */}
-        {filteredOrders.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <FiShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No orders found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || statusFilter !== 'all' || shopFilter !== 'all'
-                ? 'Try adjusting your search or filter criteria.'
-                : 'No orders have been placed yet.'
-              }
-            </p>
-          </div>
-        )}
-
         {/* Pagination */}
-        {filteredOrders.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Previous
-              </button>
-              <button className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredOrders.length}</span> of{' '}
-                  <span className="font-medium">{orders.length}</span> results
-                </p>
+        {filteredOrders.length > itemsPerPage && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length} results
               </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  <button className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    Previous
-                  </button>
-                  <button className="relative inline-flex items-center bg-slate-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">
-                    1
-                  </button>
-                  <button className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    2
-                  </button>
-                  <button className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    Next
-                  </button>
-                </nav>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                {/* Page numbers */}
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => goToPage(pageNumber)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          currentPage === pageNumber
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={goToNext}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* Results Summary */}
+      {filteredOrders.length > 0 && (
+        <div className="mt-4 text-sm text-gray-600 text-center">
+          Total {filteredOrders.length} orders found
+        </div>
+      )}
     </div>
   );
 }
