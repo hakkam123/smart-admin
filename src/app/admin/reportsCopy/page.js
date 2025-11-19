@@ -1,8 +1,6 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
-import { useAuth } from '@clerk/nextjs';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -25,150 +23,155 @@ export default function ReportsPage() {
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { getToken } = useAuth();
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  // inline SVG placeholder to avoid calling /api/placeholder
-  const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="100%" height="100%" fill="%23e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="10">No Image</text></svg>';
+  // Sample complaint reports data
+  const complaintStats = [
+    {
+      title: 'Total Reports',
+      value: '156',
+      change: '+12',
+      period: 'this month',
+      icon: FiAlertTriangle,
+      color: 'bg-red-500'
+    },
+    {
+      title: 'Pending',
+      value: '23',
+      change: '+5',
+      period: 'today',
+      icon: FiClock,
+      color: 'bg-yellow-500'
+    },
+    {
+      title: 'Resolved',
+      value: '98',
+      change: '+18',
+      period: 'this week',
+      icon: FiCheckCircle,
+      color: 'bg-green-500'
+    },
+    {
+      title: 'High Priority',
+      value: '8',
+      change: '+2',
+      period: 'today',
+      icon: FiAlertCircle,
+      color: 'bg-orange-500'
+    }
+  ];
 
-  // Complaint stats derived from fetched `reports`
-  const complaintStats = useMemo(() => {
-    const total = reports.length;
-    const lower = (s) => String(s || '').toLowerCase();
-
-    // month boundaries (local time)
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const monthStart = new Date(year, month, 1);
-    const nextMonthStart = new Date(year, month + 1, 1);
-
-    const inCurrentMonth = (ts) => {
-      if (!ts) return false;
-      const d = new Date(ts);
-      return d >= monthStart && d < nextMonthStart;
-    };
-
-    const totalThisMonth = reports.filter(r => inCurrentMonth(r.submittedAt || r.reportDate)).length;
-    const newThisMonth = reports.filter(r => lower(r.status) === 'new' && inCurrentMonth(r.submittedAt || r.reportDate)).length;
-    const resolvedThisMonth = reports.filter(r => (r.resolvedAt || null) && inCurrentMonth(r.resolvedAt)).length;
-    const highThisMonth = reports.filter(r => lower(r.priority) === 'high' && inCurrentMonth(r.submittedAt || r.reportDate)).length;
-
-    const makeEntry = (title, value, monthCount, icon, color) => ({
-      title,
-      value: String(value),
-      change: monthCount > 0 ? `+${monthCount}` : '',
-      period: monthCount > 0 ? 'this month' : 'No monthly report for this month.',
-      icon,
-      color
-    });
-
-    return [
-      makeEntry('Total Reports', total, totalThisMonth, FiAlertTriangle, 'bg-red-500'),
-      makeEntry('New', reports.filter(r => lower(r.status) === 'new').length, newThisMonth, FiClock, 'bg-yellow-500'),
-      makeEntry('Resolved', reports.filter(r => lower(r.status) === 'resolved').length, resolvedThisMonth, FiCheckCircle, 'bg-green-500'),
-      makeEntry('High Priority', reports.filter(r => lower(r.priority) === 'high').length, highThisMonth, FiAlertCircle, 'bg-orange-500')
-    ];
-  }, [reports]);
-
-  useEffect(() => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
-
-    const fetchReports = async () => {
-      setLoading(true);
-      try {
-        const headers = {};
-        if (getToken) {
-          try {
-            const token = await getToken();
-            if (token) headers.Authorization = `Bearer ${token}`;
-          } catch (err) {
-            console.warn('Failed to get Clerk token', err);
-          }
-        }
-
-        const res = await axios.get(`${API_BASE}/api/store/reports`, { headers });
-        if (res.data && res.data.reports) {
-          const normalized = res.data.reports.map(r => {
-            // helper: format diff into hours/days per spec
-            const formatTimeAgo = (ts) => {
-              if (!ts) return '';
-              const t = new Date(ts).getTime();
-              if (Number.isNaN(t)) return '';
-              const diffMs = Date.now() - t;
-              const hourMs = 1000 * 60 * 60;
-              if (diffMs < hourMs) return 'less than 1 hour';
-              const hours = Math.floor(diffMs / hourMs);
-              if (hours < 24) return `${hours} hours`;
-              const days = Math.floor(hours / 24);
-              return `${days} days`;
-            };
-
-            let responseTimestamp = r.submittedAt || null;
-            if (r.status === 'IN_PROGRESS') {
-              if (r.reviewedAt) responseTimestamp = r.reviewedAt;
-            }
-            if (r.status === 'RESOLVED') {
-              if (r.resolvedAt) responseTimestamp = r.resolvedAt;
-            }
-
-            // last updated = newest of submittedAt, reviewedAt, resolvedAt
-            const timestamps = [r.submittedAt, r.reviewedAt, r.resolvedAt].filter(Boolean).map(x => new Date(x).getTime());
-            const lastUpdatedTs = timestamps.length ? Math.max(...timestamps) : null;
-
-            const responseTimeStr = responseTimestamp ? formatTimeAgo(responseTimestamp) : '';
-            const lastUpdatedAgo = lastUpdatedTs ? formatTimeAgo(new Date(lastUpdatedTs).toISOString()) : '';
-
-            return {
-              id: r.id,
-              // raw reporter for fallback if needed
-              reporter: r.reporter || null,
-              // preserve raw timestamps for accurate stats
-              submittedAt: r.submittedAt || null,
-              reviewedAt: r.reviewedAt || null,
-              resolvedAt: r.resolvedAt || null,
-              reportType: r.reportType ? String(r.reportType).toLowerCase() : (r.product ? 'product' : 'store'),
-              customer: {
-                name: r.reporter?.name || r.reporterName || 'Unknown',
-                email: r.reporter?.email || r.reporterEmail || ''
-              },
-              product: r.product ? {
-                name: r.product.name,
-                sku: r.product.sku || '',
-                image: Array.isArray(r.product.images) && r.product.images.length ? r.product.images[0] : IMAGE_PLACEHOLDER
-              } : { name: r.store?.name || 'Store', sku: '', image: r.store?.logo || IMAGE_PLACEHOLDER },
-              issue: r.subject || r.issue || '',
-              description: r.message || '',
-              priority: r.priority ? String(r.priority).toLowerCase() : '',
-              status: r.status ? String(r.status).toLowerCase() : '',
-              category: r.category || '',
-              reportDate: r.submittedAt || r.reportDate || null,
-              responseTime: responseTimeStr,
-              lastUpdatedAgo,
-            };
-          });
-          console.log('Fetched reports:', normalized);
-
-          setReports(normalized);
-        } else {
-          setReports([]);
-        }
-      } catch (error) {
-        console.error('Error fetching store reports:', error);
-        setReports([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReports();
-  }, [getToken]);
+  const complaintReports = [
+    {
+      id: 'RPT-001',
+      customer: {
+        name: 'John Smith',
+        email: 'john.smith@email.com',
+        phone: '+1 234-567-8900'
+      },
+      product: {
+        name: 'Wireless Bluetooth Headphones',
+        sku: 'WBH-001',
+        image: '/api/placeholder/60/60'
+      },
+      issue: 'Product not working after 2 weeks of use',
+      description: 'The headphones stopped charging and the left speaker is not working. Customer tried different charging cables but the issue persists.',
+      priority: 'high',
+      status: 'pending',
+      category: 'defective',
+      reportDate: '2024-10-22',
+      responseTime: '2 hours',
+      assignedTo: 'Sarah Wilson'
+    },
+    {
+      id: 'RPT-002',
+      customer: {
+        name: 'Maria Garcia',
+        email: 'maria.garcia@email.com',
+        phone: '+1 234-567-8901'
+      },
+      product: {
+        name: 'Smart Fitness Watch',
+        sku: 'SFW-002',
+        image: '/api/placeholder/60/60'
+      },
+      issue: 'Incorrect item received',
+      description: 'Customer ordered a black fitness watch but received a white one. The packaging was correct but the product inside was wrong.',
+      priority: 'medium',
+      status: 'in-progress',
+      category: 'wrong-item',
+      reportDate: '2024-10-21',
+      responseTime: '4 hours',
+      assignedTo: 'Mike Johnson'
+    },
+    {
+      id: 'RPT-003',
+      customer: {
+        name: 'David Lee',
+        email: 'david.lee@email.com',
+        phone: '+1 234-567-8902'
+      },
+      product: {
+        name: 'Laptop Cooling Stand',
+        sku: 'LCS-003',
+        image: '/api/placeholder/60/60'
+      },
+      issue: 'Product damaged during shipping',
+      description: 'The laptop stand arrived with a broken leg and scratches on the surface. The packaging was also damaged.',
+      priority: 'medium',
+      status: 'resolved',
+      category: 'damaged',
+      reportDate: '2024-10-20',
+      responseTime: '1 hour',
+      assignedTo: 'Emily Brown'
+    },
+    {
+      id: 'RPT-004',
+      customer: {
+        name: 'Lisa Johnson',
+        email: 'lisa.johnson@email.com',
+        phone: '+1 234-567-8903'
+      },
+      product: {
+        name: 'USB-C Cable Set',
+        sku: 'USC-004',
+        image: '/api/placeholder/60/60'
+      },
+      issue: 'Poor product quality',
+      description: 'The USB-C cables stop working after a few days. Customer has tried multiple cables from the set and all have the same issue.',
+      priority: 'high',
+      status: 'pending',
+      category: 'quality',
+      reportDate: '2024-10-22',
+      responseTime: '30 minutes',
+      assignedTo: 'Alex Chen'
+    },
+    {
+      id: 'RPT-005',
+      customer: {
+        name: 'Robert Wilson',
+        email: 'robert.wilson@email.com',
+        phone: '+1 234-567-8904'
+      },
+      product: {
+        name: 'Wireless Phone Charger',
+        sku: 'WPC-005',
+        image: '/api/placeholder/60/60'
+      },
+      issue: 'Missing accessories',
+      description: 'The wireless charger was delivered without the power adapter and USB cable that should be included in the package.',
+      priority: 'low',
+      status: 'resolved',
+      category: 'missing-parts',
+      reportDate: '2024-10-19',
+      responseTime: '6 hours',
+      assignedTo: 'Sarah Wilson'
+    }
+  ];
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'new':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress':
+      case 'in-progress':
         return 'bg-blue-100 text-blue-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
@@ -177,11 +180,6 @@ export default function ReportsPage() {
       default:
         return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  const formatStatusLabel = (status) => {
-    if (!status) return '';
-    return String(status).replace(/_/g, ' ').replace(/-/g, ' ');
   };
 
   const getPriorityColor = (priority) => {
@@ -197,16 +195,15 @@ export default function ReportsPage() {
     }
   };
 
-  const filteredReports = reports.filter(report => {
+  const filteredReports = complaintReports.filter(report => {
     const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus;
     const matchesPriority = selectedPriority === 'all' || report.priority === selectedPriority;
-    const q = searchTerm.trim().toLowerCase();
-    const matchesSearch = q === '' ||
-      (report.customer?.name || '').toLowerCase().includes(q) ||
-      (report.product?.name || '').toLowerCase().includes(q) ||
-      (report.issue || '').toLowerCase().includes(q) ||
-      (report.id || '').toLowerCase().includes(q);
-
+    const matchesSearch = searchTerm === '' || 
+      report.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.issue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.id.toLowerCase().includes(searchTerm.toLowerCase());
+    
     return matchesStatus && matchesPriority && matchesSearch;
   });
 
@@ -269,13 +266,10 @@ export default function ReportsPage() {
               onChange={(e) => setSelectedStatus(e.target.value)}
             >
               <option value="all">All Status</option>
-              <option value="new">New</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="in_progress">In Progress</option>
+              <option value="pending">Pending</option>
+              <option value="in-progress">In Progress</option>
               <option value="resolved">Resolved</option>
-              <option value="rejected">Rejected</option>
               <option value="closed">Closed</option>
-              <option value="escalated">Escalated</option>
             </select>
             <select
               className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -335,8 +329,8 @@ export default function ReportsPage() {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{report.customer?.name || report.reporter?.name || 'Unknown'}</div>
-                        <div className="text-sm text-gray-500">{report.customer?.email || report.reporter?.email || ''}</div>
+                        <div className="text-sm font-medium text-gray-900">{report.customer.name}</div>
+                        <div className="text-sm text-gray-500">{report.customer.email}</div>
                       </div>
                     </div>
                   </td>
@@ -345,7 +339,7 @@ export default function ReportsPage() {
                       <div className="shrink-0 h-10 w-10">
                         <Image 
                           className="h-10 w-10 rounded object-cover" 
-                          src={report.product.image||report.store?.image}  
+                          src={report.product.image} 
                           alt={report.product.name}
                           width={40}
                           height={40}
@@ -354,9 +348,7 @@ export default function ReportsPage() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{report.product.name}</div>
-                        {report.reportType === 'product' && report.product?.sku && (
-                          <div className="text-sm text-gray-500">SKU: {report.product.sku}</div>
-                        )}
+                        <div className="text-sm text-gray-500">SKU: {report.product.sku}</div>
                       </div>
                     </div>
                   </td>
@@ -375,7 +367,7 @@ export default function ReportsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
-                      {formatStatusLabel(report.status)}
+                      {report.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -423,7 +415,7 @@ export default function ReportsPage() {
               <div>
                 <p className="text-sm text-gray-700">
                   Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredReports.length}</span> of{' '}
-                  <span className="font-medium">{reports.length}</span> results
+                  <span className="font-medium">{complaintReports.length}</span> results
                 </p>
               </div>
               <div>
