@@ -24,7 +24,9 @@ import {
   FiImage,
   FiFileText,
   FiExternalLink,
-  FiTrash2
+  FiTrash2,
+  FiChevronLeft,
+  FiChevronRight
 } from 'react-icons/fi';
 
 export default function ShopsManagementPage() {
@@ -38,7 +40,9 @@ export default function ShopsManagementPage() {
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [selectedShop, setSelectedShop] = useState(null);
   const [actionType, setActionType] = useState('');
-  const [confirmationInput, setConfirmationInput] = useState(''); 
+  const [confirmationInput, setConfirmationInput] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); 
 
   const fetchShops = useCallback(async () => {
     if (!isLoaded || !isSignedIn) {
@@ -126,6 +130,7 @@ export default function ShopsManagementPage() {
     }
 
     setFilteredShops(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [shops, searchTerm, statusFilter, activeFilter]);
 
   const getStatusColor = (status) => {
@@ -224,6 +229,28 @@ export default function ShopsManagementPage() {
       
     } catch (error) {
       console.error('Error toggling shop status:', error);
+    }
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredShops.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedShops = filteredShops.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -410,7 +437,7 @@ export default function ShopsManagementPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {filteredShops.map((shop) => (
+              {paginatedShops.map((shop) => (
                 <tr key={shop.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -499,6 +526,86 @@ export default function ShopsManagementPage() {
                statusFilter === 'declined' ? 'No applications have been declined.' :
                'No shop applications have been submitted yet.'}
             </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {filteredShops.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+            <div className="flex flex-1 justify-between sm:hidden">
+              <button 
+                onClick={goToPrevious}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={goToNext}
+                disabled={currentPage === totalPages}
+                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(endIndex, filteredShops.length)}</span> of{' '}
+                  <span className="font-medium">{filteredShops.length}</span> results
+                </p>
+              </div>
+              <div>
+                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                  <button 
+                    onClick={goToPrevious}
+                    disabled={currentPage === 1}
+                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Previous</span>
+                    <FiChevronLeft className="h-5 w-5" />
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => goToPage(pageNum)}
+                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
+                          currentPage === pageNum
+                            ? 'z-10 bg-slate-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600'
+                            : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button 
+                    onClick={goToNext}
+                    disabled={currentPage === totalPages}
+                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="sr-only">Next</span>
+                    <FiChevronRight className="h-5 w-5" />
+                  </button>
+                </nav>
+              </div>
+            </div>
           </div>
         )}
       </div>

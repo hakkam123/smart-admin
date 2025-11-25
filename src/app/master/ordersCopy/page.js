@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -33,78 +31,236 @@ export default function OrdersManagementPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [shopFilter, setShopFilter] = useState('all');
   const [lastUpdated, setLastUpdated] = useState(new Date());
-  const { getToken, isSignedIn } = useAuth();
 
   useEffect(() => {
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL;
+    // Mock orders data - replace with actual API call
+    const mockOrdersData = [
+      {
+        id: 'ORD-2024-001',
+        orderNumber: '#ORD001',
+        customer: {
+          name: 'John Doe',
+          email: 'john.doe@example.com',
+          phone: '+62 812-3456-7890',
+          address: 'Jl. Sudirman No. 123, Jakarta Pusat'
+        },
+        shop: {
+          id: 'SHP001',
+          name: 'Tech Store Jakarta',
+          owner: 'Ahmad Wijaya',
+          phone: '+62 811-2233-4455'
+        },
+        products: [
+          {
+            id: 'PRD001',
+            name: 'iPhone 15 Pro Max',
+            image: '/images/products/iphone15.jpg',
+            price: 18999000,
+            quantity: 1,
+            variant: '256GB Natural Titanium'
+          },
+          {
+            id: 'PRD002',
+            name: 'AirPods Pro 2',
+            image: '/images/products/airpods.jpg',
+            price: 3999000,
+            quantity: 1,
+            variant: 'White'
+          }
+        ],
+        status: 'processing',
+        paymentStatus: 'paid',
+        paymentMethod: 'Credit Card',
+        totalAmount: 22998000,
+        shippingFee: 15000,
+        discount: 100000,
+        finalAmount: 22913000,
+        orderDate: '2024-11-02T09:30:00Z',
+        estimatedDelivery: '2024-11-05T17:00:00Z',
+        trackingNumber: 'JNE123456789',
+        shippingMethod: 'JNE Regular',
+        notes: 'Tolong kirim bubble wrap extra untuk iPhone'
+      },
+      {
+        id: 'ORD-2024-002',
+        orderNumber: '#ORD002',
+        customer: {
+          name: 'Jane Smith',
+          email: 'jane.smith@company.com',
+          phone: '+62 813-9876-5432',
+          address: 'Jl. Braga No. 45, Bandung, Jawa Barat'
+        },
+        shop: {
+          id: 'SHP002',
+          name: 'Fashion Paradise',
+          owner: 'Sari Indah',
+          phone: '+62 812-5566-7788'
+        },
+        products: [
+          {
+            id: 'PRD003',
+            name: 'Dress Casual Wanita',
+            image: '/images/products/dress.jpg',
+            price: 299000,
+            quantity: 2,
+            variant: 'Size M, Navy Blue'
+          }
+        ],
+        status: 'shipped',
+        paymentStatus: 'paid',
+        paymentMethod: 'Bank Transfer',
+        totalAmount: 598000,
+        shippingFee: 12000,
+        discount: 0,
+        finalAmount: 610000,
+        orderDate: '2024-11-01T14:15:00Z',
+        estimatedDelivery: '2024-11-04T16:00:00Z',
+        trackingNumber: 'SICEPAT987654321',
+        shippingMethod: 'SiCepat Regular',
+        notes: null
+      },
+      {
+        id: 'ORD-2024-003',
+        orderNumber: '#ORD003',
+        customer: {
+          name: 'Michael Chen',
+          email: 'michael.chen@email.com',
+          phone: '+62 816-9999-0000',
+          address: 'Jl. Malioboro No. 89, Yogyakarta'
+        },
+        shop: {
+          id: 'SHP003',
+          name: 'Book Corner',
+          owner: 'Dewi Sartika',
+          phone: '+62 815-3344-5566'
+        },
+        products: [
+          {
+            id: 'PRD004',
+            name: 'Clean Code Book',
+            image: '/images/products/book-clean-code.jpg',
+            price: 180000,
+            quantity: 1,
+            variant: 'Paperback English'
+          },
+          {
+            id: 'PRD005',
+            name: 'JavaScript Complete Guide',
+            image: '/images/products/book-js.jpg',
+            price: 250000,
+            quantity: 1,
+            variant: 'Paperback Indonesian'
+          }
+        ],
+        status: 'delivered',
+        paymentStatus: 'paid',
+        paymentMethod: 'E-Wallet (OVO)',
+        totalAmount: 430000,
+        shippingFee: 10000,
+        discount: 43000,
+        finalAmount: 397000,
+        orderDate: '2024-10-30T11:45:00Z',
+        estimatedDelivery: '2024-11-02T15:00:00Z',
+        trackingNumber: 'POS123987456',
+        shippingMethod: 'Pos Indonesia',
+        notes: null
+      },
+      {
+        id: 'ORD-2024-004',
+        orderNumber: '#ORD004',
+        customer: {
+          name: 'Sarah Wilson',
+          email: 'sarah.wilson@tech.com',
+          phone: '+62 815-7777-8888',
+          address: 'Jl. Gajah Mada No. 67, Medan'
+        },
+        shop: {
+          id: 'SHP001',
+          name: 'Tech Store Jakarta',
+          owner: 'Ahmad Wijaya',
+          phone: '+62 811-2233-4455'
+        },
+        products: [
+          {
+            id: 'PRD006',
+            name: 'Samsung Galaxy S24 Ultra',
+            image: '/images/products/samsung-s24.jpg',
+            price: 16999000,
+            quantity: 1,
+            variant: '512GB Titanium Black'
+          }
+        ],
+        status: 'pending',
+        paymentStatus: 'pending',
+        paymentMethod: 'Bank Transfer',
+        totalAmount: 16999000,
+        shippingFee: 25000,
+        discount: 0,
+        finalAmount: 17024000,
+        orderDate: '2024-11-02T16:20:00Z',
+        estimatedDelivery: '2024-11-06T17:00:00Z',
+        trackingNumber: null,
+        shippingMethod: 'JNE YES',
+        notes: 'Pembayaran dalam proses verifikasi'
+      },
+      {
+        id: 'ORD-2024-005',
+        orderNumber: '#ORD005',
+        customer: {
+          name: 'Ahmad Rahman',
+          email: 'ahmad.rahman@gmail.com',
+          phone: '+62 814-5555-1234',
+          address: 'Jl. Pemuda No. 78, Surabaya'
+        },
+        shop: {
+          id: 'SHP004',
+          name: 'Sports Equipment',
+          owner: 'Budi Santoso',
+          phone: '+62 817-6677-8899'
+        },
+        products: [
+          {
+            id: 'PRD007',
+            name: 'Sepatu Running Nike',
+            image: '/images/products/nike-shoes.jpg',
+            price: 1299000,
+            quantity: 1,
+            variant: 'Size 42, Black White'
+          }
+        ],
+        status: 'cancelled',
+        paymentStatus: 'refunded',
+        paymentMethod: 'Credit Card',
+        totalAmount: 1299000,
+        shippingFee: 15000,
+        discount: 0,
+        finalAmount: 1314000,
+        orderDate: '2024-11-01T10:30:00Z',
+        estimatedDelivery: null,
+        trackingNumber: null,
+        shippingMethod: 'JNE Regular',
+        notes: 'Dibatalkan karena stok kosong'
+      }
+    ];
 
+    // Simulate API call
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const headers = {};
-        if (getToken) {
-          try {
-            const token = await getToken();
-            if (token) headers.Authorization = `Bearer ${token}`;
-          } catch (err) {
-            console.warn('Failed to get Clerk token', err);
-          }
-        }
-
-  // call admin endpoint which returns all orders (requires admin user or service secret)
-  const res = await axios.get(`${API_BASE}/api/admin/orders`, { headers });
-        // backend returns { orders }
-        if (res.data && res.data.orders) {
-          const serverOrders = res.data.orders.map(o => ({
-            id: o.id,
-            orderNumber: `#${o.id}`,
-            customer: {
-              name: o.user?.name || 'User',
-              email: o.user?.email || '',
-              phone: o.address?.phone || '',
-              address: o.address ? `${o.address.street}, ${o.address.city}` : ''
-            },
-            shop: {
-              id: o.storeId,
-              name: o.store?.name || `Store ${o.storeId}`,
-            },
-            products: o.orderItems ? o.orderItems.map(it => ({
-              id: it.product?.id || it.productId,
-              name: it.product?.name || '',
-              image: it.product?.images?.[0] || '',
-              price: it.price,
-              quantity: it.quantity,
-            })) : [],
-            status: o.status || 'pending',
-            paymentStatus: o.isPaid ? 'paid' : 'pending',
-            paymentMethod: o.paymentMethod,
-            totalAmount: o.total,
-            shippingFee: 0,
-            discount: 0,
-            finalAmount: o.total,
-            orderDate: o.createdAt,
-            estimatedDelivery: null,
-            trackingNumber: null,
-            shippingMethod: null,
-            notes: null
-          }));
-
-          setOrders(serverOrders);
-          setFilteredOrders(serverOrders);
-          setLastUpdated(new Date());
-        } else {
-          console.warn('Unexpected orders response', res.data);
-        }
+        // Replace with actual API call
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        setOrders(mockOrdersData);
+        setFilteredOrders(mockOrdersData);
+        setLastUpdated(new Date());
       } catch (error) {
         console.error('Error fetching orders:', error);
-        // fallback: keep empty or show message
       } finally {
         setLoading(false);
       }
     };
 
-  fetchOrders();
-  }, [getToken, isSignedIn]);
+    fetchOrders();
+  }, []);
 
   useEffect(() => {
     let filtered = orders;
@@ -136,15 +292,15 @@ export default function OrdersManagementPage() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'ORDER_PLACED':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'PROCESSING':
+      case 'processing':
         return 'bg-blue-100 text-blue-800';
-      case 'SHIPPED':
+      case 'shipped':
         return 'bg-purple-100 text-purple-800';
-      case  'DELIVERED':
+      case 'delivered':
         return 'bg-green-100 text-green-800';
-      case 'CANCELLED':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -153,15 +309,15 @@ export default function OrdersManagementPage() {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'ORDER_PLACED':
+      case 'pending':
         return <FiClock className="h-4 w-4" />;
-      case 'PROCESSING':
+      case 'processing':
         return <FiPackage className="h-4 w-4" />;
-      case 'SHIPPED':
+      case 'shipped':
         return <FiTruck className="h-4 w-4" />;
-      case 'DELIVERED':
+      case 'delivered':
         return <FiCheckCircle className="h-4 w-4" />;
-      case 'CANCELLED':
+      case 'cancelled':
         return <FiXCircle className="h-4 w-4" />;
       default:
         return <FiShoppingCart className="h-4 w-4" />;
@@ -460,7 +616,7 @@ export default function OrdersManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <Link 
-                      href={`/master/orders/${order.id}`}
+                      href={`/master/ordersCopy/${order.id}`}
                       className="text-slate-600 hover:text-slate-900 p-2 rounded hover:bg-gray-100" 
                       title="View Order Details"
                     >
