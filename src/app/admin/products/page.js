@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@clerk/nextjs';
 import { 
   FiSearch, 
   FiFilter, 
@@ -12,76 +13,19 @@ import {
   FiTrash2,
   FiEye
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function ProductsPage() {
+  const { getToken } = useAuth();
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(['all', 'Electronics', 'Accessories', 'Clothing', 'Books']);
 
-  const products = [
-    {
-      id: 1,
-      name: 'Laptop Gaming ASUS ROG',
-      category: 'Electronics',
-      price: 15000000,
-      stock: 25,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Laptop gaming dengan performa tinggi untuk gaming dan editing'
-    },
-    {
-      id: 2,
-      name: 'Smartphone Samsung Galaxy',
-      category: 'Electronics',
-      price: 8500000,
-      stock: 12,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Smartphone flagship dengan kamera terbaik di kelasnya'
-    },
-    {
-      id: 3,
-      name: 'Headphones Sony WH-1000XM4',
-      category: 'Electronics',
-      price: 1200000,
-      stock: 8,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Headphones wireless dengan noise cancellation terbaik'
-    },
-    {
-      id: 4,
-      name: 'Mechanical Keyboard',
-      category: 'Accessories',
-      price: 750000,
-      stock: 15,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Keyboard mechanical untuk gaming dan productivity'
-    },
-    {
-      id: 5,
-      name: 'Monitor 4K Dell',
-      category: 'Electronics',
-      price: 3200000,
-      stock: 6,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Monitor 4K 27 inch untuk professional dan gaming'
-    },
-    {
-      id: 6,
-      name: 'Mouse Gaming Logitech',
-      category: 'Accessories',
-      price: 450000,
-      stock: 20,
-      image: '/api/placeholder/300/200',
-      status: 'active',
-      description: 'Mouse gaming dengan sensor presisi tinggi'
-    }
-  ];
-
-  const categories = ['all', 'Electronics', 'Accessories', 'Clothing', 'Books'];
   const priceRanges = [
     { label: 'Semua Harga', value: 'all' },
     { label: 'Di bawah Rp 500K', value: '0-500000' },
@@ -89,6 +33,35 @@ export default function ProductsPage() {
     { label: 'Rp 1Jt - 5Jt', value: '1000000-5000000' },
     { label: 'Di atas Rp 5Jt', value: '5000000-999999999' }
   ];
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.get(`${baseUrl}/api/store/product`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.products) {
+        setProducts(response.data.products);
+        
+        // Get unique categories from products
+        const uniqueCategories = ['all', ...new Set(response.data.products.map(p =>
+          typeof p.category === 'object' ? p.category.name : p.category
+        ))];
+        setCategories(uniqueCategories);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Failed to fetch products');
+      console.error('Error loading products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
@@ -99,16 +72,36 @@ export default function ProductsPage() {
   };
 
   const filteredProducts = products.filter(product => {
-    let matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
+    const productCategory = typeof product.category === 'object' ? product.category.name : product.category;
+    let matchesCategory = selectedCategory === 'all' || productCategory === selectedCategory;
     let matchesPrice = true;
-    
+    let matchesSearch = true;
+
     if (priceRange !== 'all') {
       const [min, max] = priceRange.split('-').map(Number);
       matchesPrice = product.price >= min && product.price <= max;
     }
-    
-    return matchesCategory && matchesPrice;
+
+    // Filter by search query across name, description, and category
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      matchesSearch = (
+        product.name.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query) ||
+        (typeof product.category === 'object' ? product.category.name.toLowerCase() : product.category.toLowerCase()).includes(query)
+      );
+    }
+
+    return matchesCategory && matchesPrice && matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -144,6 +137,8 @@ export default function ProductsPage() {
               <input
                 type="text"
                 placeholder="Cari produk..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full h-10 pl-10 pr-4 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -227,9 +222,17 @@ export default function ProductsPage() {
                 <Link href={`/admin/products/${product.id}`} className="block">
                   {/* Product Image */}
                   <div className="h-48 bg-gray-200 relative">
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                      <span className="text-sm">Product Image</span>
-                    </div>
+                    {product.images && product.images[0] ? (
+                      <img
+                        src={product.images[0]}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                        <span className="text-sm">Product Image</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Product Info */}
@@ -244,7 +247,7 @@ export default function ProductsPage() {
 
                     <div className="flex items-center justify-between">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                        {product.category}
+                        {typeof product.category === 'object' ? product.category.name : product.category}
                       </span>
                     </div>
                   </div>
