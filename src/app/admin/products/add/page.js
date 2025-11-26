@@ -12,7 +12,10 @@ import {
   FiImage,
   FiPlus,
   FiMinus,
-  FiInfo
+  FiInfo,
+  FiTruck,
+  FiPackage,
+  FiSave
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
