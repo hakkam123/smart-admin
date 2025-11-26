@@ -11,13 +11,11 @@ import {
   FiUpload,
   FiCheckCircle,
   FiClock,
-  FiAlertCircle,
-  FiCamera,
-  FiDownload,
-  FiPrinter,
   FiMessageSquare,
   FiXCircle,
-  FiShoppingCart
+  FiShoppingCart,
+  FiPackage,
+  FiTruck
 } from 'react-icons/fi';
 
 const ALL_STATUSES = ['ORDER_PLACED', 'PROCESSING', 'DELIVERED','SHIPPED' , 'CANCELLED'];
@@ -139,22 +137,22 @@ export default function OrderDetailPage() {
     }
   };
 
-  const getStatusIcon = (status) => {
-      switch (status) {
-        case 'ORDER_PLACED':
-          return <FiClock className="h-5 w-5" />;
-        case 'PROCESSING':
-          return <FiPackage className="h-5 w-5" />;
-        case 'SHIPPED':
-          return <FiTruck className="h-5 w-5" />;
-        case 'DELIVERED':
-          return <FiCheckCircle className="h-5 w-5" />;
-        case 'CANCELLED':
-          return <FiXCircle className="h-5 w-5" />;
-        default:
-          return <FiShoppingCart className="h-5 w-5" />;
-      }
-    };
+const getStatusIcon = (status) => {
+  switch (status) {
+    case 'ORDER_PLACED':
+      return <FiClock className="h-5 w-5" />;
+    case 'PROCESSING':
+      return <FiPackage className="h-5 w-5" />; // Line 147
+    case 'SHIPPED':
+      return <FiTruck className="h-5 w-5" />;     // Line 149
+    case 'DELIVERED':
+      return <FiCheckCircle className="h-5 w-5" />;
+    case 'CANCELLED':
+      return <FiXCircle className="h-5 w-5" />;
+    default:
+      return <FiShoppingCart className="h-5 w-5" />;
+  }
+};
 
   const statusDescriptions = {
     ORDER_PLACED: 'Order placed by customer',
