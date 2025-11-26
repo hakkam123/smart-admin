@@ -1,8 +1,6 @@
- 'use client';
+'use client';
 
-import React, { useState, useEffect, use } from 'react';
-import axios from 'axios';
-import { useAuth } from '@clerk/nextjs';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -30,108 +28,118 @@ import {
 export default function OrderDetailPage({ params }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { getToken, isSignedIn } = useAuth();
-  const { id } = use(params);
 
   useEffect(() => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+    // Mock order data - replace with actual API call
+    const mockOrderData = {
+      'ORD-2024-001': {
+        id: 'ORD-2024-001',
+        orderNumber: '#ORD001',
+        customer: {
+          name: 'John Doe',
+          email: 'john.doe@example.com',
+          phone: '+62 812-3456-7890',
+          address: 'Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10220',
+          avatar: '/images/users/john.jpg'
+        },
+        shop: {
+          id: 'SHP001',
+          name: 'Tech Store Jakarta',
+          owner: 'Ahmad Wijaya',
+          phone: '+62 811-2233-4455',
+          email: 'ahmad@techstore.com',
+          address: 'Jl. Thamrin No. 45, Jakarta Pusat',
+          logo: '/images/shops/tech-store.jpg'
+        },
+        products: [
+          {
+            id: 'PRD001',
+            name: 'iPhone 15 Pro Max',
+            image: '/images/products/iphone15.jpg',
+            price: 18999000,
+            quantity: 1,
+            variant: '256GB Natural Titanium',
+            sku: 'IPH15PM-256-NT',
+            weight: '221g'
+          },
+          {
+            id: 'PRD002',
+            name: 'AirPods Pro 2',
+            image: '/images/products/airpods.jpg',
+            price: 3999000,
+            quantity: 1,
+            variant: 'White',
+            sku: 'APP2-WHT',
+            weight: '50g'
+          }
+        ],
+        status: 'processing',
+        paymentStatus: 'paid',
+        paymentMethod: 'Credit Card (**** 1234)',
+        paymentDate: '2024-11-02T09:35:00Z',
+        totalAmount: 22998000,
+        shippingFee: 15000,
+        discount: 100000,
+        tax: 0,
+        finalAmount: 22913000,
+        orderDate: '2024-11-02T09:30:00Z',
+        estimatedDelivery: '2024-11-05T17:00:00Z',
+        deliveryMethod: 'Regular Delivery',
+        shippingAddress: 'Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10220',
+        notes: 'Tolong kirim bubble wrap extra untuk iPhone',
+        statusHistory: [
+          {
+            status: 'pending',
+            timestamp: '2024-11-02T09:30:00Z',
+            description: 'Order placed by customer'
+          },
+          {
+            status: 'paid',
+            timestamp: '2024-11-02T09:35:00Z',
+            description: 'Payment confirmed via Credit Card'
+          },
+          {
+            status: 'processing',
+            timestamp: '2024-11-02T10:15:00Z',
+            description: 'Order is being prepared by shop'
+          }
+        ],
+        invoiceNumber: 'INV-2024-001',
+        billingAddress: 'Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta 10220'
+      }
+    };
 
+    // Simulate API call
     const fetchOrder = async () => {
       setLoading(true);
       try {
-        const headers = {};
-        if (getToken) {
-          try {
-            const token = await getToken();
-            if (token) headers.Authorization = `Bearer ${token}`;
-          } catch (err) {
-            console.warn('Failed to get Clerk token', err);
-          }
-        }
-
-        const url = `${API_BASE}/api/admin/orders/${id}`;
-        const res = await axios.get(url, { headers });
-
-        let o = res.data;
-        // Support APIs that return { order } or an order object directly
-        if (o && o.order) o = o.order;
-
-        if (!o) {
-          setOrder(null);
-          return;
-        }
-
-        const mapped = {
-          id: o.id,
-          orderNumber: o.id ? `#${o.id}` : o.orderNumber || '',
-          customer: {
-            name: o.user?.name || o.userName || 'User',
-            email: o.user?.email || o.email || '',
-            phone: o.address?.phone || '',
-            address: o.address ? `${o.address.street || ''}${o.address.city ? ', ' + o.address.city : ''}` : (o.shippingAddress || ''),
-            avatar: o.user?.image || ''
-          },
-          shop: {
-            id: o.storeId || o.store?.id,
-            name: o.store?.name || `Store ${o.storeId || ''}`,
-            owner: o.store?.owner || '' ,
-            phone: o.store?.contact || '',
-            email: o.store?.email || '',
-            address: o.store?.address || '',
-            logo: o.store?.logo || ''
-          },
-          products: o.orderItems ? o.orderItems.map(it => ({
-            id: it.product?.id || it.productId,
-            name: it.product?.name || it.name || '',
-            image: it.product?.images?.[0] || (it.product?.image) || '',
-            price: it.price || it.unitPrice || 0,
-            quantity: it.quantity || 1,
-            variant: it.variant || '',
-            sku: it.product?.sku || '' ,
-            weight: it.product?.weight || ''
-          })) : (o.products || []),
-          status: o.status || 'pending',
-          paymentStatus: o.isPaid || o.paymentStatus ? (o.isPaid ? 'paid' : o.paymentStatus) : 'pending',
-          paymentMethod: o.paymentMethod || o.payment?.method || '',
-          paymentDate: o.paymentDate || o.paidAt || null,
-          totalAmount: o.total || o.totalAmount || 0,
-          shippingFee: o.shippingFee || 0,
-          discount: o.discount || 0,
-          tax: o.tax || 0,
-          finalAmount: o.finalAmount || o.total || 0,
-          orderDate: o.createdAt || o.orderDate || null,
-          estimatedDelivery: o.estimatedDelivery || null,
-          deliveryMethod: o.deliveryMethod || null,
-          shippingAddress: o.address ? `${o.address.street || ''} ${o.address.city || ''}` : (o.shippingAddress || ''),
-          notes: o.notes || o.note || null,
-          statusHistory: o.statusHistory || [],
-          invoiceNumber: o.invoiceNumber || o.invoice || '' ,
-          billingAddress: o.billingAddress || ''
-        };
-
-        setOrder(mapped);
+        // Replace with actual API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const foundOrder = mockOrderData[params.id];
+        setOrder(foundOrder);
       } catch (error) {
         console.error('Error fetching order:', error);
-        setOrder(null);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) fetchOrder();
-  }, [id, getToken, isSignedIn]);
+    if (params.id) {
+      fetchOrder();
+    }
+  }, [params.id]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'ORDER_PLACED':
+      case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'PROCESSING':
+      case 'processing':
         return 'bg-blue-100 text-blue-800';
-      case 'SHIPPED':
+      case 'shipped':
         return 'bg-purple-100 text-purple-800';
-      case 'DELIVERED':
+      case 'delivered':
         return 'bg-green-100 text-green-800';
-      case 'CANCELLED':
+      case 'cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -140,33 +148,24 @@ export default function OrderDetailPage({ params }) {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'ORDER_PLACED':
+      case 'pending':
         return <FiClock className="h-5 w-5" />;
-      case 'PROCESSING':
+      case 'processing':
         return <FiPackage className="h-5 w-5" />;
-      case 'SHIPPED':
+      case 'shipped':
         return <FiTruck className="h-5 w-5" />;
-      case 'DELIVERED':
+      case 'delivered':
         return <FiCheckCircle className="h-5 w-5" />;
-      case 'CANCELLED':
+      case 'cancelled':
         return <FiXCircle className="h-5 w-5" />;
       default:
         return <FiShoppingCart className="h-5 w-5" />;
     }
   };
 
-  // Frontend canonical descriptions for statuses (render-only)
-  const statusDescriptions = {
-    ORDER_PLACED: 'Order placed by customer',
-    PROCESSING: 'Order is being prepared by shop',
-    SHIPPED: 'Order has been shipped',
-    DELIVERED: 'Order delivered to customer',
-    CANCELLED: 'Order was cancelled',
-  };
-
   const getPaymentStatusColor = (status) => {
     switch (status) {
-      case 'paid' :
+      case 'paid':
         return 'bg-green-100 text-green-800';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
@@ -248,7 +247,7 @@ export default function OrderDetailPage({ params }) {
               href="/master/orders"
               className="inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
             >
-              <FiArrowLeft className=" h-4 w-4" />
+              <FiArrowLeft className="mr-2 h-4 w-4" />
               
             </Link>
             <div>
@@ -257,6 +256,13 @@ export default function OrderDetailPage({ params }) {
             </div>
           </div>
           
+          {/* Status Badge */}
+          <div className="flex items-center space-x-3">
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+              {getStatusIcon(order.status)}
+              <span className="ml-2">{order.status}</span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -418,15 +424,11 @@ export default function OrderDetailPage({ params }) {
                           </div>
                           <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                             <div>
-                              <p className="text-sm text-gray-500">{statusDescriptions[item.status] || item.description || ''}</p>
+                              <p className="text-sm text-gray-500">{item.description}</p>
                             </div>
                             <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                              <time dateTime={item.createdAt}>
-                                {(() => {
-                                  const d = new Date(item.createdAt);
-                                  if (isNaN(d)) return '';
-                                  return d.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-                                })()}
+                              <time dateTime={item.timestamp}>
+                                {new Date(item.timestamp).toLocaleString()}
                               </time>
                             </div>
                           </div>
@@ -520,7 +522,7 @@ export default function OrderDetailPage({ params }) {
                     {/* Step 1: Order Placed */}
                     <div className="flex items-center space-x-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        ['ORDER_PLACED', 'PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status) 
+                        ['pending', 'processing', 'shipped', 'delivered'].includes(order.status) 
                           ? 'bg-green-500 text-white' 
                           : 'bg-gray-300 text-gray-500'
                       }`}>
@@ -535,7 +537,7 @@ export default function OrderDetailPage({ params }) {
                     {/* Step 2: Payment Confirmed */}
                     <div className="flex items-center space-x-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        order.paymentStatus === 'paid' && ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status)
+                        order.paymentStatus === 'paid' && ['processing', 'shipped', 'delivered'].includes(order.status)
                           ? 'bg-green-500 text-white' 
                           : order.paymentStatus === 'pending'
                           ? 'bg-yellow-500 text-white'
@@ -555,18 +557,18 @@ export default function OrderDetailPage({ params }) {
                       </div>
                     </div>
 
-                    {/* Step 3: Order PROCESSING */}
+                    {/* Step 3: Order Processing */}
                     <div className="flex items-center space-x-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        ['PROCESSING', 'SHIPPED', 'DELIVERED'].includes(order.status)
-                          ? order.status === 'PROCESSING' 
+                        ['processing', 'shipped', 'delivered'].includes(order.status)
+                          ? order.status === 'processing' 
                             ? 'bg-blue-500 text-white animate-pulse'
                             : 'bg-green-500 text-white'
                           : 'bg-gray-300 text-gray-500'
                       }`}>
-                        {['SHIPPED', 'DELIVERED'].includes(order.status) ? (
+                        {['shipped', 'delivered'].includes(order.status) ? (
                           <FiCheckCircle className="h-5 w-5" />
-                        ) : order.status === 'PROCESSING' ? (
+                        ) : order.status === 'processing' ? (
                           <FiPackage className="h-5 w-5" />
                         ) : (
                           <FiClock className="h-5 w-5" />
@@ -575,9 +577,9 @@ export default function OrderDetailPage({ params }) {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">Order Processing</p>
                         <p className="text-xs text-gray-500">
-                          {order.status === 'PROCESSING' 
+                          {order.status === 'processing' 
                             ? 'Shop is preparing your order'
-                            : ['SHIPPED', 'DELIVERED'].includes(order.status)
+                            : ['shipped', 'delivered'].includes(order.status)
                             ? 'Order prepared successfully'
                             : 'Waiting for shop to process'
                           }
@@ -588,15 +590,15 @@ export default function OrderDetailPage({ params }) {
                     {/* Step 4: Order Shipped */}
                     <div className="flex items-center space-x-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        ['SHIPPED', 'DELIVERED'].includes(order.status)
-                          ? order.status === 'SHIPPED'
+                        ['shipped', 'delivered'].includes(order.status)
+                          ? order.status === 'shipped'
                             ? 'bg-purple-500 text-white animate-pulse'
                             : 'bg-green-500 text-white'
                           : 'bg-gray-300 text-gray-500'
                       }`}>
-                        {order.status === 'DELIVERED' ? (
+                        {order.status === 'delivered' ? (
                           <FiCheckCircle className="h-5 w-5" />
-                        ) : order.status === 'SHIPPED' ? (
+                        ) : order.status === 'shipped' ? (
                           <FiTruck className="h-5 w-5" />
                         ) : (
                           <FiClock className="h-5 w-5" />
@@ -605,9 +607,9 @@ export default function OrderDetailPage({ params }) {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">Order Shipped</p>
                         <p className="text-xs text-gray-500">
-                          {order.status === 'SHIPPED' 
+                          {order.status === 'shipped' 
                             ? 'Order is on the way to customer'
-                            : order.status === 'DELIVERED'
+                            : order.status === 'delivered'
                             ? 'Order was shipped successfully'
                             : 'Waiting for shipment'
                           }
@@ -618,11 +620,11 @@ export default function OrderDetailPage({ params }) {
                     {/* Step 5: Order Delivered */}
                     <div className="flex items-center space-x-3">
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                        order.status === 'DELIVERED'
+                        order.status === 'delivered'
                           ? 'bg-green-500 text-white'
                           : 'bg-gray-300 text-gray-500'
                       }`}>
-                        {order.status === 'DELIVERED' ? (
+                        {order.status === 'delivered' ? (
                           <FiCheckCircle className="h-5 w-5" />
                         ) : (
                           <FiClock className="h-5 w-5" />
@@ -631,7 +633,7 @@ export default function OrderDetailPage({ params }) {
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">Order Delivered</p>
                         <p className="text-xs text-gray-500">
-                          {order.status === 'DELIVERED' 
+                          {order.status === 'delivered' 
                             ? 'Order completed successfully'
                             : 'Waiting for delivery confirmation'
                           }
@@ -699,6 +701,33 @@ export default function OrderDetailPage({ params }) {
                 <button className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                   <FiFileText className="mr-2 h-4 w-4" />
                   Download Invoice
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-3">
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center">
+                  <FiUser className="mr-2 h-4 w-4" />
+                  Contact Customer
+                </button>
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center">
+                  <FiShoppingBag className="mr-2 h-4 w-4" />
+                  Contact Shop
+                </button>
+                <button className="w-full text-left px-4 py-2 text-sm text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 flex items-center">
+                  <FiCalendar className="mr-2 h-4 w-4" />
+                  View Order History
+                </button>
+                <button className="w-full text-left px-4 py-2 text-sm text-green-700 bg-green-50 rounded-md hover:bg-green-100 flex items-center">
+                  <FiFileText className="mr-2 h-4 w-4" />
+                  Print Order Details
                 </button>
               </div>
             </div>

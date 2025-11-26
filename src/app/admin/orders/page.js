@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
+// ensure axios sends cookies (Clerk session) for cross-origin calls
+axios.defaults.withCredentials = true;
 import Link from 'next/link';
 import { 
   FiSearch,
@@ -27,237 +30,53 @@ export default function OrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Sample orders data
-  const orderStats = [
-    {
-      title: 'Total Orders',
-      value: '2,350',
-      change: '+12.5%',
-      period: 'vs last month',
-      icon: FiShoppingCart,
-      color: 'bg-blue-500'
-    },
-    {
-      title: 'Pending Orders',
-      value: '45',
-      change: '+5',
-      period: 'today',
-      icon: FiClock,
-      color: 'bg-yellow-500'
-    },
-    {
-      title: 'Completed Orders',
-      value: '2,156',
-      change: '+18.2%',
-      period: 'this month',
-      icon: FiCheckCircle,
-      color: 'bg-green-500'
-    },
-    {
-      title: 'Revenue',
-      value: 'Rp 45,231,890',
-      change: '+20.1%',
-      period: 'this month',
-      icon: FiDollarSign,
-      color: 'bg-purple-500'
-    }
-  ];
+  // order stats will be computed from fetched orders
 
-  const ordersData = [
-    {
-      id: 1,
-      invoice: 'INV-123',
-      quantity: 1,
-      totalPrice: 100000,
-      buyerName: 'Edward Timber',
-      date: '28/09/2025',
-      status: 'completed',
-      items: [
-        {
-          name: 'Wireless Headphones',
-          sku: 'WH-001',
-          price: 100000,
-          quantity: 1
-        }
-      ],
-      shippingAddress: 'Jl. Kol. Ahmad Syam No.45 E, Bogor',
-      paymentMethod: 'Credit Card'
-    },
-    {
-      id: 2,
-      invoice: 'INV-124',
-      quantity: 2,
-      totalPrice: 1500000,
-      buyerName: 'Sarah Wilson',
-      date: '27/09/2025',
-      status: 'pending',
-      items: [
-        {
-          name: 'Smart Watch',
-          sku: 'SW-002',
-          price: 750000,
-          quantity: 2
-        }
-      ],
-      shippingAddress: 'Jl. Sudirman No.123, Jakarta',
-      paymentMethod: 'Bank Transfer'
-    },
-    {
-      id: 3,
-      invoice: 'INV-125',
-      quantity: 1,
-      totalPrice: 2500000,
-      buyerName: 'John Smith',
-      date: '26/09/2025',
-      status: 'shipped',
-      items: [
-        {
-          name: 'Gaming Laptop',
-          sku: 'GL-003',
-          price: 2500000,
-          quantity: 1
-        }
-      ],
-      shippingAddress: 'Jl. Gatot Subroto No.456, Bandung',
-      paymentMethod: 'E-Wallet'
-    },
-    {
-      id: 4,
-      invoice: 'INV-126',
-      quantity: 3,
-      totalPrice: 450000,
-      buyerName: 'Maria Garcia',
-      date: '25/09/2025',
-      status: 'processing',
-      items: [
-        {
-          name: 'Phone Case',
-          sku: 'PC-004',
-          price: 150000,
-          quantity: 3
-        }
-      ],
-      shippingAddress: 'Jl. Thamrin No.789, Jakarta',
-      paymentMethod: 'Credit Card'
-    },
-    {
-      id: 5,
-      invoice: 'INV-127',
-      quantity: 1,
-      totalPrice: 800000,
-      buyerName: 'David Brown',
-      date: '24/09/2025',
-      status: 'cancelled',
-      items: [
-        {
-          name: 'Bluetooth Speaker',
-          sku: 'BS-005',
-          price: 800000,
-          quantity: 1
-        }
-      ],
-      shippingAddress: 'Jl. Kebon Jeruk No.321, Jakarta',
-      paymentMethod: 'Bank Transfer'
-    },
-    {
-      id: 6,
-      invoice: 'INV-128',
-      quantity: 2,
-      totalPrice: 3000000,
-      buyerName: 'Emma Johnson',
-      date: '23/09/2025',
-      status: 'completed',
-      items: [
-        {
-          name: 'Tablet Pro',
-          sku: 'TP-006',
-          price: 1500000,
-          quantity: 2
-        }
-      ],
-      shippingAddress: 'Jl. Merdeka No.654, Surabaya',
-      paymentMethod: 'Credit Card'
-    },
-    {
-      id: 7,
-      invoice: 'INV-129',
-      quantity: 1,
-      totalPrice: 650000,
-      buyerName: 'Michael Chen',
-      date: '22/09/2025',
-      status: 'pending',
-      items: [
-        {
-          name: 'Wireless Mouse',
-          sku: 'WM-007',
-          price: 650000,
-          quantity: 1
-        }
-      ],
-      shippingAddress: 'Jl. Diponegoro No.987, Yogyakarta',
-      paymentMethod: 'E-Wallet'
-    },
-    {
-      id: 8,
-      invoice: 'INV-130',
-      quantity: 4,
-      totalPrice: 2000000,
-      buyerName: 'Lisa Anderson',
-      date: '21/09/2025',
-      status: 'shipped',
-      items: [
-        {
-          name: 'Power Bank',
-          sku: 'PB-008',
-          price: 500000,
-          quantity: 4
-        }
-      ],
-      shippingAddress: 'Jl. Ahmad Yani No.147, Medan',
-      paymentMethod: 'Bank Transfer'
-    },
-    {
-      id: 9,
-      invoice: 'INV-131',
-      quantity: 1,
-      totalPrice: 1200000,
-      buyerName: 'Robert Taylor',
-      date: '20/09/2025',
-      status: 'processing',
-      items: [
-        {
-          name: 'Smart TV Box',
-          sku: 'STB-009',
-          price: 1200000,
-          quantity: 1
-        }
-      ],
-      shippingAddress: 'Jl. Pahlawan No.258, Semarang',
-      paymentMethod: 'Credit Card'
-    },
-    {
-      id: 10,
-      invoice: 'INV-132',
-      quantity: 2,
-      totalPrice: 900000,
-      buyerName: 'Jennifer White',
-      date: '19/09/2025',
-      status: 'completed',
-      items: [
-        {
-          name: 'USB Cable',
-          sku: 'UC-010',
-          price: 450000,
-          quantity: 2
-        }
-      ],
-      shippingAddress: 'Jl. Veteran No.369, Malang',
-      paymentMethod: 'E-Wallet'
-    }
-  ];
+  // Note: sample/dummy orders removed — UI uses only fetched orders from the API.
+
+  const [ordersData, setOrdersData] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState(null);
+
+  // Use fetched orders only
+  const sourceOrders = ordersData;
+
+  // Fetch seller orders from besukma API
+  useEffect(() => {
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+    const fetchOrders = async () => {
+      setLoadingOrders(true);
+      setOrdersError(null);
+      try {
+        const res = await axios.get(`${API_BASE}/api/store/orders`);
+        const fetched = res?.data?.orders || [];
+        // Map to the UI-friendly shape used below
+        const mapped = fetched.map(o => ({
+          id: o.id,
+          invoice: o.invoice || (o.id ? `#${o.id}` : ''),
+          quantity: (o.orderItems || []).reduce((s, it) => s + (it.quantity || 0), 0),
+          totalPrice: o.total || o.totalAmount || o.finalAmount || 0,
+          buyerName: o.user?.name || o.userName || 'User',
+          date: o.createdAt || null,
+          status: o.status || 'pending',
+          items: o.orderItems || [],
+          shippingAddress: o.address ? `${o.address.street || ''} ${o.address.city || ''}` : (o.shippingAddress || ''),
+          paymentMethod: o.paymentMethod || o.payment?.method || ''
+        }));
+        setOrdersData(mapped);
+      } catch (err) {
+        console.error('Failed to fetch seller orders:', err?.response || err);
+        setOrdersError(err?.message || 'Failed to fetch orders');
+      } finally {
+        setLoadingOrders(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   // Filter orders based on status and search term
-  const filteredOrders = ordersData.filter(order => {
+  const filteredOrders = sourceOrders.filter(order => {
     const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
     const matchesSearch = 
       order.invoice.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -273,15 +92,15 @@ export default function OrdersPage() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed':
+      case 'DELIVERED':
         return 'bg-green-100 text-green-800';
-      case 'pending':
+      case 'ORDER_PLACED':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'PROCESSING':
         return 'bg-blue-100 text-blue-800';
-      case 'shipped':
+      case 'SHIPPED':
         return 'bg-purple-100 text-purple-800';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -295,6 +114,74 @@ export default function OrdersPage() {
       minimumFractionDigits: 0
     }).format(amount);
   };
+
+  const formatDateTime = (d) => {
+    if (!d) return '';
+    try {
+      const dt = new Date(d);
+      return dt.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return String(d);
+    }
+  };
+
+  // Compute order statistics (total, pending, completed, revenue) from fetched orders
+  const orderStats = useMemo(() => {
+    const orders = sourceOrders || [];
+    const totalOrders = orders.length;
+
+    const lc = s => String(s || '').toLowerCase();
+
+    const pendingCount = orders.filter(o => {
+      const s = lc(o.status);
+      return s === 'pending' || s.includes('process') || s === 'order_placed' || s === 'order placed';
+    }).length;
+
+    const completedCount = orders.filter(o => {
+      const s = lc(o.status);
+      return s === 'completed' || s.includes('deliv') || s === 'delivered';
+    }).length;
+
+    const revenue = orders.reduce((sum, o) => {
+      const val = Number(o.totalPrice || o.total || o.finalAmount || 0) || 0;
+      return sum + val;
+    }, 0);
+
+    return [
+      {
+        title: 'Total Orders',
+        value: String(totalOrders),
+        change: '',
+        period: '',
+        icon: FiShoppingCart,
+        color: 'bg-blue-500'
+      },
+      {
+        title: 'Pending Orders',
+        value: String(pendingCount),
+        change: '',
+        period: '',
+        icon: FiClock,
+        color: 'bg-yellow-500'
+      },
+      {
+        title: 'Completed Orders',
+        value: String(completedCount),
+        change: '',
+        period: '',
+        icon: FiCheckCircle,
+        color: 'bg-green-500'
+      },
+      {
+        title: 'Revenue',
+        value: formatCurrency(revenue),
+        change: '',
+        period: '',
+        icon: FiDollarSign,
+        color: 'bg-purple-500'
+      }
+    ];
+  }, [sourceOrders]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -346,14 +233,14 @@ export default function OrdersPage() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="block w-40 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="block w-40 px-3 py-2 text-sm border border-grey-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder-black"
               >
                 <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="ORDER_PLACED">Order Placed</option>
+                <option value="PROCESSING">Processing</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
 
               {/* Search */}
@@ -364,7 +251,7 @@ export default function OrdersPage() {
                   placeholder="Search Order"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 w-64 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-black placeholder-grey"
                 />
               </div>
             </div>
@@ -421,24 +308,24 @@ export default function OrdersPage() {
                     {order.buyerName}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {order.date}
+                    {formatDateTime(order.date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                      Status
+                      {order.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="flex items-center space-x-2">
-                      <button className="p-1 text-gray-400 hover:text-red-600">
-                        <FiTrash2 size={16} />
-                      </button>
                       <Link 
                         href={`/admin/orders/${order.id}`}
                         className="p-1 text-gray-400 hover:text-blue-600"
                       >
                         <FiEye size={16} />
                       </Link>
+                       {/* <button className="p-1 text-gray-400 hover:text-red-600">
+                        <FiTrash2 size={16} />
+                      </button> */}
                     </div>
                   </td>
                 </tr>

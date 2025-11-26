@@ -46,7 +46,7 @@ export default function CustomerRelationship() {
               href="/admin/messages" 
               className="text-orange-600 hover:text-orange-700 text-sm flex items-center"
             >
-              View All <FiExternalLink className="ml-1" size={14} />
+              View All
             </Link>
           </div>
           <div className="space-y-3">

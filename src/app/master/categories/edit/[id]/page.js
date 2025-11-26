@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 import {
@@ -78,7 +79,7 @@ export default function EditCategoryPage() {
     if (id) {
       fetchCategory();
     }
-  }, [id, getToken]);
+  }, [id, params.id, getToken]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -335,10 +336,13 @@ export default function EditCategoryPage() {
                     </button>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <img
+                    <Image
                       src={formData.image}
                       alt="Preview"
+                      width={200}
+                      height={160}
                       className="max-h-40 rounded object-contain"
+                      unoptimized
                     />
                   </div>
                 </div>

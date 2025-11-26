@@ -9,15 +9,10 @@ import {
   FiUpload,
   FiX,
   FiArrowLeft,
-  FiSave,
   FiImage,
   FiPlus,
   FiMinus,
-  FiInfo,
-  FiTruck,
-  FiDollarSign,
-  FiPackage,
-  FiShield
+  FiInfo
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';

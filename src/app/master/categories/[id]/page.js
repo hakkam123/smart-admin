@@ -51,7 +51,7 @@ export default function CategoryDetailPage() {
     if (params.id) {
       fetchCategory();
     }
-  }, [id]);
+  }, [params.id, getToken]);
 
   const handleToggleStatus = async () => {
     if (category) {

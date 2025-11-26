@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import axios from 'axios';
 import { 
   FiUsers,
   FiSearch, 
@@ -12,12 +13,10 @@ import {
   FiX,
   FiClock,
   FiMail,
-  FiPhone,
   FiCalendar,
   FiUserCheck,
   FiUserX,
-  FiShield,
-  FiRefreshCw
+  FiShield
 } from 'react-icons/fi';
 
 export default function UsersManagementPage() {
@@ -25,103 +24,37 @@ export default function UsersManagementPage() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await axios.get(`${apiUrl}/api/users`);
+      
+      const transformedUsers = response.data.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatar: user.image || '/images/users/default.jpg',
+        registeredAt: new Date().toISOString(), 
+      }));
+
+      setUsers(transformedUsers);
+      setFilteredUsers(transformedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      alert('Failed to fetch users data. Please check your connection.');
+      setUsers([]);
+      setFilteredUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Mock users data - replace with actual API call
-    const mockUsers = [
-      {
-        id: '1',
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+62 812-3456-7890',
-        avatar: '/images/users/john.jpg',
-        role: 'customer',
-        registeredAt: '2024-01-15T10:30:00Z',
-        lastLogin: '2024-01-19T14:30:00Z',
-        address: 'Jakarta, Indonesia',
-        dateOfBirth: '1990-05-15',
-        gender: 'Male',
-        totalOrders: 12,
-        totalSpent: 'Rp 2,450,000'
-      },
-      {
-        id: '2',
-        name: 'Jane Smith',
-        email: 'jane.smith@company.com',
-        phone: '+62 813-9876-5432',
-        avatar: '/images/users/jane.jpg',
-        role: 'customer',
-        registeredAt: '2024-01-10T14:20:00Z',
-        lastLogin: '2024-01-20T09:15:00Z',
-        address: 'Bandung, Indonesia',
-        dateOfBirth: '1985-08-22',
-        gender: 'Female',
-        totalOrders: 8,
-        totalSpent: 'Rp 1,890,000'
-      },
-      {
-        id: '3',
-        name: 'Ahmad Rahman',
-        email: 'ahmad.rahman@gmail.com',
-        phone: '+62 814-5555-1234',
-        avatar: '/images/users/ahmad.jpg',
-        role: 'vendor',
-        registeredAt: '2024-01-12T16:45:00Z',
-        lastLogin: '2024-01-18T12:30:00Z',
-        address: 'Surabaya, Indonesia',
-        dateOfBirth: '1992-12-03',
-        gender: 'Male',
-        totalOrders: 25,
-        totalSpent: 'Rp 5,670,000'
-      },
-      {
-        id: '4',
-        name: 'Sarah Wilson',
-        email: 'sarah.wilson@tech.com',
-        phone: '+62 815-7777-8888',
-        avatar: '/images/users/sarah.jpg',
-        role: 'vendor',
-        registeredAt: '2024-01-18T11:20:00Z',
-        lastLogin: null,
-        address: 'Medan, Indonesia',
-        dateOfBirth: '1988-03-17',
-        gender: 'Female',
-        totalOrders: 0,
-        totalSpent: 'Rp 0'
-      },
-      {
-        id: '5',
-        name: 'Michael Chen',
-        email: 'michael.chen@email.com',
-        phone: '+62 816-9999-0000',
-        avatar: '/images/users/michael.jpg',
-        role: 'customer',
-        registeredAt: '2024-01-05T08:30:00Z',
-        lastLogin: '2024-01-19T14:45:00Z',
-        address: 'Yogyakarta, Indonesia',
-        dateOfBirth: '1995-09-28',
-        gender: 'Male',
-        totalOrders: 15,
-        totalSpent: 'Rp 3,210,000'
-      }
-    ];
-
-    // Simulate API call
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        // Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setUsers(mockUsers);
-        setFilteredUsers(mockUsers);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
 
@@ -131,56 +64,16 @@ export default function UsersManagementPage() {
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.includes(searchTerm)
+        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Filter by role
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role === roleFilter);
-    }
-
     setFilteredUsers(filtered);
-  }, [users, searchTerm, roleFilter]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [users, searchTerm]);
 
-  const getActivityColor = (lastLogin) => {
-    if (!lastLogin) return 'bg-gray-100 text-gray-800';
-    
-    const loginDate = new Date(lastLogin);
-    const now = new Date();
-    const daysDiff = Math.floor((now - loginDate) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff <= 1) return 'bg-green-100 text-green-800';
-    if (daysDiff <= 7) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-red-100 text-red-800';
-  };
 
-  const getActivityStatus = (lastLogin) => {
-    if (!lastLogin) return 'Never Login';
-    
-    const loginDate = new Date(lastLogin);
-    const now = new Date();
-    const daysDiff = Math.floor((now - loginDate) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff <= 1) return 'Active';
-    if (daysDiff <= 7) return 'Recent';
-    return 'Inactive';
-  };
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case 'vendor':
-        return 'bg-blue-100 text-blue-800';
-      case 'customer':
-        return 'bg-purple-100 text-purple-800';
-      case 'admin':
-        return 'bg-slate-100 text-slate-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const getActionButtons = (user) => {
     return (
@@ -192,6 +85,28 @@ export default function UsersManagementPage() {
         <FiEye className="h-4 w-4" />
       </Link>
     );
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    setCurrentPage(page);
+  };
+
+  const goToPrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   if (loading) {
@@ -230,19 +145,19 @@ export default function UsersManagementPage() {
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+              onClick={fetchUsers}
+              disabled={loading}
+              className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors"
             >
-              <FiRefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              {loading ? 'Loading...' : 'Refresh'}
             </button>
           </div>
         </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow mb-6">
-        <div className="p-6">
+      <div className="bg-white rounded-lg border mb-6">
+        <div className="p-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Search */}
             <div className="relative">
@@ -257,54 +172,21 @@ export default function UsersManagementPage() {
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
               />
             </div>
-
-            {/* Role Filter */}
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiFilter className="h-5 w-5 text-gray-400" />
-              </div>
-              <select
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-                className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
-              >
-                <option value="all">All Roles</option>
-                <option value="customer">Customer</option>
-                <option value="vendor">Vendor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-
-            {/* Results Count */}
-            <div className="flex items-center justify-end">
-              <span className="text-sm text-gray-500">
-                Showing {filteredUsers.length} of {users.length} users
-              </span>
-            </div>
           </div>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+            <thead className="bg-white">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   User
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contact
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Orders
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Registered
@@ -315,7 +197,18 @@ export default function UsersManagementPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center">
+                      <FiUsers className="h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                      <p className="text-gray-500">No users match your current search.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -346,29 +239,6 @@ export default function UsersManagementPage() {
                       <FiMail className="mr-1 h-4 w-4 text-gray-400" />
                       {user.email}
                     </div>
-                    <div className="text-sm text-gray-500 flex items-center mt-1">
-                      <FiPhone className="mr-1 h-4 w-4 text-gray-400" />
-                      {user.phone}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.role)}`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getActivityColor(user.lastLogin)}`}>
-                      <span>{getActivityStatus(user.lastLogin)}</span>
-                    </span>
-                    {user.lastLogin && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(user.lastLogin).toLocaleDateString()}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="text-sm font-medium">{user.totalOrders} orders</div>
-                    <div className="text-sm text-gray-500">{user.totalSpent}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex items-center">
@@ -380,7 +250,8 @@ export default function UsersManagementPage() {
                     {getActionButtons(user)}
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -391,8 +262,8 @@ export default function UsersManagementPage() {
             <FiUsers className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No users found</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || roleFilter !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
+              {searchTerm 
+                ? 'Try adjusting your search criteria.'
                 : 'No users have registered yet.'
               }
             </p>
@@ -400,38 +271,66 @@ export default function UsersManagementPage() {
         )}
 
         {/* Pagination */}
-        {filteredUsers.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Previous
-              </button>
-              <button className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredUsers.length}</span> of{' '}
-                  <span className="font-medium">{users.length}</span> results
-                </p>
+        {filteredUsers.length > itemsPerPage && (
+          <div className="px-6 py-4 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} results
               </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  <button className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    Previous
-                  </button>
-                  <button className="relative inline-flex items-center bg-slate-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">
-                    1
-                  </button>
-                  <button className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    2
-                  </button>
-                  <button className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                    Next
-                  </button>
-                </nav>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={goToPrevious}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                {/* Page numbers */}
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => goToPage(pageNumber)}
+                        className={`px-3 py-2 text-sm font-medium rounded-md ${
+                          currentPage === pageNumber
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={goToNext}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </div>

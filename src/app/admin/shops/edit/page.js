@@ -195,27 +195,25 @@ export default function EditShopPage({ params }) {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {params?.id ? 'Edit Shop' : 'Add New Shop'}
+              {params?.id ? 'Edit Shop' : 'Edit Shop'}
             </h1>
             <p className="text-gray-600">
-              {params?.id ? 'Update shop information and settings' : 'Create a new online shop profile'}
+              {params?.id ? 'Update shop information and settings' : 'Update shop information and settings'}
             </p>
           </div>
         </div>
         <div className="flex space-x-3">
           <Link
             href="/admin/shops"
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
-            <FiX className="mr-2 h-4 w-4" />
             Cancel
           </Link>
           <button
             onClick={handleSave}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
           >
-            <FiSave className="mr-2 h-4 w-4" />
             {loading ? 'Saving...' : 'Save Shop'}
           </button>
         </div>
