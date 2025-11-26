@@ -9,7 +9,6 @@ import {
   FiSearch, 
   FiEdit3,
   FiTrash2,
-  FiEye,
   FiTag,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -287,13 +286,6 @@ export default function CategoriesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">
-                      <Link 
-                        href={`/master/categories/${category.id}`}
-                        className="text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-gray-100" 
-                        title="View Details"
-                      >
-                        <FiEye className="h-4 w-4" />
-                      </Link>
                       <Link
                         href={`/master/categories/edit/${category.id}`}
                         className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"

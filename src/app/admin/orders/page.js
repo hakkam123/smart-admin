@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import useAuth from '@clerk/nextjs';
+import { useAuth } from '@clerk/nextjs';
 axios.defaults.withCredentials = true;
 import Link from 'next/link';
 import { 
@@ -37,7 +37,7 @@ export default function OrdersPage() {
   const [ordersData, setOrdersData] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
-  const [getToken] = useAuth();
+  const {getToken } = useAuth();
   // Use fetched orders only
   const sourceOrders = ordersData;
 
@@ -48,9 +48,11 @@ export default function OrdersPage() {
       setLoadingOrders(true);
       setOrdersError(null);
       try {
-        const res = await axios.get(`${API_BASE}/api/store/orders`);
+        const token = await getToken();
+        const res = await axios.get(`${API_BASE}/api/store/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const fetched = res?.data?.orders || [];
-        headers: { Authorization: `Bearer ${token}` }
         const mapped = fetched.map(o => ({
           id: o.id,
           invoice: o.invoice || (o.id ? `#${o.id}` : ''),

@@ -87,7 +87,7 @@ export default function EditCategoryPage() {
       [name]: type === 'checkbox' 
         ? checked 
         : name === 'sortOrder' 
-          ? parseInt(value) || 0  // Ensure sortOrder is always a number
+          ? parseInt(value) || 0 
           : value
     }));
   };
@@ -122,7 +122,6 @@ export default function EditCategoryPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
 
-      // Prepare form data for API request
       const categoryData = new FormData();
       categoryData.append('name', formData.name);
       categoryData.append('description', formData.description);
@@ -241,7 +240,7 @@ export default function EditCategoryPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                     placeholder="Enter category name"
                     required
                   />
@@ -258,7 +257,7 @@ export default function EditCategoryPage() {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                     placeholder="Enter category description"
                   />
                 </div>
@@ -274,7 +273,7 @@ export default function EditCategoryPage() {
                     name="slug"
                     value={formData.slug}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-gray-50"
+                    className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-gray-50"
                     placeholder="category-slug"
                     readOnly
                   />
@@ -405,7 +404,7 @@ export default function EditCategoryPage() {
                   name="metaTitle"
                   value={formData.metaTitle}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
+                  className="w-full px-3 py-2 text-gray-500 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                   placeholder="SEO meta title"
                 />
               </div>
@@ -419,7 +418,7 @@ export default function EditCategoryPage() {
                   value={formData.metaDescription}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
+                  className="w-full px-3 py-2 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500"
                   placeholder="SEO meta description"
                 />
                 <p className="text-xs text-gray-500 mt-1">Brief description for search engines</p>
@@ -432,17 +431,10 @@ export default function EditCategoryPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
 
             <div className="space-y-3">
-              {/* <button
-                type="button"
-                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
-              >
-                Save as Draft
-              </button> */}
+
               <button
                 type="button"
                 onClick={() => {
-                  // Reset form to initial values
-                  // For now, we'll just reload the page
                   window.location.reload();
                 }}
                 className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200"

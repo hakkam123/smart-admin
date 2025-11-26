@@ -20,8 +20,8 @@ export default function AddCategoryPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: '', // URL for preview
-    imageFile: null, // Actual file object
+    image: '',
+    imageFile: null, 
     status: 'active',
     slug: '',
     metaTitle: '',
@@ -29,7 +29,6 @@ export default function AddCategoryPage() {
     parentCategory: ''
   });
 
-  // Auto generate slug from name
   useEffect(() => {
     if (formData.name) {
       const slug = formData.name
@@ -173,7 +172,7 @@ export default function AddCategoryPage() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    className="w-full pl-5 pr-3 py-3 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                     placeholder="Enter category name"
                     required
                   />
@@ -190,7 +189,7 @@ export default function AddCategoryPage() {
                     value={formData.description}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                    className="w-full pl-5 pr-3 py-3 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
                     placeholder="Enter category description"
                   />
                 </div>
@@ -206,7 +205,7 @@ export default function AddCategoryPage() {
                     name="slug"
                     value={formData.slug}
                     onChange={handleInputChange}
-                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-gray-50"
+                    className="w-full pl-5 pr-3 py-3 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-gray-50"
                     placeholder="category-slug"
                     readOnly
                   />

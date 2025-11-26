@@ -320,24 +320,43 @@ const getStatusIcon = (status) => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Information</h2>
               
               {/* Order Summary */}
-              <div className="grid grid-cols-4 gap-4 mb-6 pb-6 border-b border-gray-200">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Invoice</label>
-                  <p className="text-gray-900 font-medium">{orderData.invoice}</p>
+              <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
+                {/* Row 1: Invoice and Customer Name */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-500">Invoice</label>
+                    <p 
+                      className="text-gray-900 font-medium break-all text-sm leading-relaxed" 
+                      title={orderData.invoice}
+                    >
+                      {orderData.invoice}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-500">Customer Name</label>
+                    <p 
+                      className="text-gray-900 font-medium overflow-hidden text-sm leading-relaxed"
+                      title={orderData.customerName}
+                    >
+                      {orderData.customerName}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Customer Name</label>
-                  <p className="text-gray-900 font-medium">{orderData.customerName}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Total</label>
-                  <p className="text-gray-900 font-medium">{orderData.total.toLocaleString('id-ID')}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(orderData.status)}`}>
-                    {orderData.status === 'delivered' ? 'Delivery' : orderData.status}
-                  </span>
+                
+                {/* Row 2: Total and Status */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-500">Total</label>
+                    <p className="text-gray-900 font-medium text-lg">Rp {orderData.total.toLocaleString('id-ID')}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-500">Status</label>
+                    <div>
+                      <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(orderData.status)}`}>
+                        {orderData.status === 'delivered' ? 'DELIVERED' : orderData.status}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -490,31 +509,67 @@ const getStatusIcon = (status) => {
                           <div className="relative pb-8">
                             {!isLast ? <span className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true" /> : null}
                             <div className="relative flex space-x-3">
-                              <div>
+                              <div className="shrink-0">
                                 <span className={`h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white ${getStatusColor(item.status || item.state)}`}>
                                   {getStatusIcon(item.status || item.state)}
                                 </span>
                               </div>
-                              <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                <div>
-                                  <p className="text-sm text-gray-500">{statusDescriptions[item.status] || ''}</p>
-                                  {item.attachments && item.attachments.length > 0 && (
-                                    <div className="mt-2">
-                                      <a href={item.attachments[0]} target="_blank" rel="noreferrer">
-                                        <Image src={item.attachments[0]} alt="attachment" width={180} height={120} className="rounded-md object-cover" />
-                                      </a>
+                              <div className="flex-1 pt-1.5">
+                                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start lg:space-x-4">
+                                  <div className="flex-1 space-y-2">
+                                    {/* Status */}
+                                    <div>
+                                      <p className="text-xs text-gray-400 uppercase tracking-wide">Status</p>
+                                      <p className="text-sm text-gray-900 font-medium">
+                                        {STATUS_LABELS[item.status] || item.status || ''}
+                                      </p>
                                     </div>
-                                  )}
-                                   <p className="text-sm text-gray-500 mt-2">{item.description || ''}</p>
-                                </div>
-                                <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                                  <time dateTime={ts}>
-                                    {(() => {
-                                      const d = new Date(ts);
-                                      if (isNaN(d)) return '';
-                                      return d.toLocaleString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
-                                    })()}
-                                  </time>
+                                    
+                                    {/* Timestamp */}
+                                    <div>
+                                      <p className="text-xs text-gray-400 uppercase tracking-wide">Timestamp</p>
+                                      <p className="text-sm text-gray-700">
+                                        {(() => {
+                                          const d = new Date(ts);
+                                          if (isNaN(d)) return '';
+                                          return d.toLocaleString('en-US', { 
+                                            month: 'numeric', 
+                                            day: 'numeric', 
+                                            year: 'numeric', 
+                                            hour: 'numeric', 
+                                            minute: '2-digit', 
+                                            second: '2-digit', 
+                                            hour12: true 
+                                          });
+                                        })()}
+                                      </p>
+                                    </div>
+
+                                    {/* Notes */}
+                                    {item.description && (
+                                      <div>
+                                        <p className="text-xs text-gray-400 uppercase tracking-wide">Notes</p>
+                                        <p className="text-sm text-gray-700">{item.description}</p>
+                                      </div>
+                                    )}
+
+                                    {/* Picture */}
+                                    {item.attachments && item.attachments.length > 0 && (
+                                      <div>
+                                        <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Picture</p>
+                                        <a href={item.attachments[0]} target="_blank" rel="noreferrer">
+                                          <Image 
+                                            src={item.attachments[0]} 
+                                            alt="attachment" 
+                                            width={120} 
+                                            height={80} 
+                                            className="rounded-md object-cover border border-gray-200" 
+                                            unoptimized 
+                                          />
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
