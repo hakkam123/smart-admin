@@ -1,35 +1,43 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  FiUpload, 
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import {
+  FiUpload,
   FiX,
   FiArrowLeft,
   FiImage,
-  FiPlus,
-  FiMinus,
-  FiInfo
+  FiPackage,
+  FiTruck,
+  FiSave
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function AddProductPage() {
+  const { getToken } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('general');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [productData, setProductData] = useState({
     name: '',
     description: '',
-    category: '',
-    price: '',
-    stock: '',
+    category: '', 
+    mrp: 0, 
+    price: 0, 
+    inStock: true, 
+    stock: 0,
+    minStock: 0,
     weight: '',
     dimensions: '',
     model: '',
     additionalInfo: '',
-    status: 'published',
-    // Advanced fields
+    status: 'draft', 
     sku: '',
     barcode: '',
-    minStock: '',
     shippingWeight: '',
     shippingLength: '',
     shippingWidth: '',
@@ -38,7 +46,7 @@ export default function AddProductPage() {
     returnPolicy: '',
     tags: '',
     metaTitle: '',
-    metaDescription: ''
+    metaDescription: '',
   });
 
   // Product Stock variants for Advanced tab
@@ -53,15 +61,36 @@ export default function AddProductPage() {
   const [images, setImages] = useState([]);
   const [mainImage, setMainImage] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Categories for dropdown - prepare for API fetch
-  const categories = [
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'accessories', label: 'Accessories' },
-    { value: 'clothing', label: 'Clothing' },
-    { value: 'books', label: 'Books' },
-    { value: 'home', label: 'Home & Garden' }
-  ];
+  // Fetch categories from API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = await getToken();
+        const response = await axios.get(`${baseUrl}/api/categories`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data.success) {
+          // Format the API response to match the expected format for the dropdown using IDs
+          const formattedCategories = response.data.data.map(cat => ({
+            value: cat.id,
+            label: cat.name
+          }));
+          setCategories(formattedCategories);
+        }
+      } catch (error) {
+        toast.error(error?.response?.data?.message || error.message || 'Failed to fetch categories');
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [getToken]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,8 +101,8 @@ export default function AddProductPage() {
   };
 
   const handleVariantChange = (id, field, value) => {
-    setProductVariants(prev => 
-      prev.map(variant => 
+    setProductVariants(prev =>
+      prev.map(variant =>
         variant.id === id ? { ...variant, [field]: value } : variant
       )
     );
@@ -81,10 +110,10 @@ export default function AddProductPage() {
 
   const addVariant = () => {
     const newId = Math.max(...productVariants.map(v => v.id)) + 1;
-    setProductVariants(prev => [...prev, { 
-      id: newId, 
-      variant: `Produk ${String.fromCharCode(65 + prev.length)}`, 
-      stock: '' 
+    setProductVariants(prev => [...prev, {
+      id: newId,
+      variant: `Produk ${String.fromCharCode(65 + prev.length)}`,
+      stock: ''
     }]);
   };
 
@@ -146,37 +175,46 @@ export default function AddProductPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
+    setIsSubmitting(true);
+
     // Prepare form data for API submission
     const formData = new FormData();
-    
+
     // Add product data
     Object.keys(productData).forEach(key => {
       formData.append(key, productData[key]);
+      console.log(key, productData[key]);
     });
 
     // Add images
-    images.forEach((image, index) => {
+    images.forEach((image) => {
       formData.append(`images`, image.file);
-      if (image.id === mainImage?.id) {
-        formData.append('mainImageIndex', index);
-      }
     });
 
     try {
-      // TODO: Replace with actual API endpoint
-      console.log('Product data to submit:', productData);
-      console.log('Images to upload:', images);
-      
-      // Example API call:
-      // const response = await fetch('/api/products', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      
-      alert('Product would be saved! (API integration needed)');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.post(`${baseUrl}/api/store/product`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.message) {
+        toast.success('Product added successfully!');
+        // Redirect to products page
+        router.push('/admin/products');
+      } else {
+        toast.error(response.data.message || 'Failed to add product');
+        console.error('API error:', response.data);
+      }
     } catch (error) {
-      console.error('Error saving product:', error);
+      toast.error(error?.response?.data?.message || error.message || 'Error adding product');
+      console.error('Error adding product:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -361,152 +399,389 @@ export default function AddProductPage() {
               {/* General Tab Content */}
               {activeTab === 'general' && (
                 <div className="space-y-6">
-                  {/* Detail Produk */}
+                  {/* Product Name */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Detail Produk
+                      Product Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={productData.name}
+                      onChange={handleInputChange}
+                      placeholder="Enter product name"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
                     </label>
                     <textarea
                       name="description"
                       value={productData.description}
                       onChange={handleInputChange}
-                      placeholder="Isi Detail Produk Anda membahas tentang barang Anda lebih dan mengutamakan kejelasan yang detil tentang, produk yang Anda realisasikan atau buat. Dan lanjutkan penjualan barang dengan menanyakan kepada pelanggan tentang detail-detail yang perlu ditanya."
+                      placeholder="Enter product description"
                       rows={6}
                       className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
                     />
                   </div>
 
-              {/* Jenis Produk & Model */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jenis Produk
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={productData.name}
-                    onChange={handleInputChange}
-                    placeholder="Tentukan Jenis"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Model
-                  </label>
-                  <input
-                    type="text"
-                    name="model"
-                    value={productData.model}
-                    onChange={handleInputChange}
-                    placeholder="Model"
-                    className="w-full p-3 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-              </div>
+                  {/* Price Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Actual Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        name="mrp"
+                        value={productData.mrp}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Offer Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        name="price"
+                        value={productData.price}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
 
-              {/* Ukuran */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ukuran
-                </label>
-                <input
-                  type="text"
-                  name="dimensions"
-                  value={productData.dimensions}
-                  onChange={handleInputChange}
-                  placeholder="Panjang x Lebar x Tinggi"
-                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
+                  {/* Category and Status */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Category
+                      </label>
+                      <select
+                        name="category"
+                        value={productData.category}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      >
+                        <option value="">Select a category</option>
+                        {categories.map(category => (
+                          <option key={category.value} value={category.value}>
+                            {category.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                      </label>
+                      <select
+                        name="status"
+                        value={productData.status}
+                        onChange={handleInputChange}
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="archived">Archived</option>
+                      </select>
+                    </div>
+                  </div>
 
-              {/* Informasi Tambahan */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Informasi Tambahan
-                </label>
-                <textarea
-                  name="additionalInfo"
-                  value={productData.additionalInfo}
-                  onChange={handleInputChange}
-                  placeholder="Tambahkan informasi tambahan seperti garansi, cara perawatan, atau spesifikasi teknis lainnya yang penting untuk pelanggan ketahui."
-                  rows={4}
-                  className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg  focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                />
-              </div>
+                  {/* SKU and Barcode */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        SKU
+                      </label>
+                      <input
+                        type="text"
+                        name="sku"
+                        value={productData.sku}
+                        onChange={handleInputChange}
+                        placeholder="Enter product SKU"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Barcode
+                      </label>
+                      <input
+                        type="text"
+                        name="barcode"
+                        value={productData.barcode}
+                        onChange={handleInputChange}
+                        placeholder="Enter product barcode (if any)"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
 
-              
+                  {/* In Stock and Stock Quantity */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        In Stock
+                      </label>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="inStock"
+                          checked={productData.inStock}
+                          onChange={(e) => setProductData(prev => ({ ...prev, inStock: e.target.checked }))}
+                          className="w-5 h-5"
+                        />
+                        <span className="ml-2">Product is in stock</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Stock Quantity
+                      </label>
+                      <input
+                        type="number"
+                        name="stock"
+                        value={productData.stock}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Min Stock and Weight */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Minimum Stock Level
+                      </label>
+                      <input
+                        type="number"
+                        name="minStock"
+                        value={productData.minStock}
+                        onChange={handleInputChange}
+                        placeholder="0"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Weight (kg)
+                      </label>
+                      <input
+                        type="text"
+                        name="weight"
+                        value={productData.weight}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 1.5 kg"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dimensions */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dimensions (L x W x H)
+                    </label>
+                    <input
+                      type="text"
+                      name="dimensions"
+                      value={productData.dimensions}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 10 x 5 x 3 cm"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Model */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Model
+                    </label>
+                    <input
+                      type="text"
+                      name="model"
+                      value={productData.model}
+                      onChange={handleInputChange}
+                      placeholder="Enter product model (if any)"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Additional Information */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Additional Information
+                    </label>
+                    <textarea
+                      name="additionalInfo"
+                      value={productData.additionalInfo}
+                      onChange={handleInputChange}
+                      placeholder="Additional product information"
+                      rows={4}
+                      className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                    />
+                  </div>
                 </div>
               )}
 
               {/* Advanced Tab Content */}
               {activeTab === 'advanced' && (
                 <div className="space-y-8">
-                  {/* Product Stock Section */}
+                  {/* Shipping Information */}
                   <div>
                     <div className="flex items-center gap-2 mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Product Stock</h3>
-                      <FiInfo className="w-4 h-4 text-gray-400" />
+                      <FiTruck className="w-5 h-5 text-gray-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">Shipping Information</h3>
                     </div>
-                    
-                    <p className="text-sm text-gray-600 mb-6">
-                      *Isi stok produk yang sesuai berdasarkan ketersediaan barang atau item atau jenis produk anda.
-                    </p>
 
-                    <div className="space-y-4">
-                      {productVariants.map((variant, index) => (
-                        <div key={variant.id} className="grid grid-cols-2 gap-4">
-                          <div>
-                            <select
-                              value={variant.variant}
-                              onChange={(e) => handleVariantChange(variant.id, 'variant', e.target.value)}
-                              className="w-full p-3 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            >
-                              <option value={variant.variant}>{variant.variant}</option>
-                            </select>
-                          </div>
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              placeholder="Jumlah"
-                              value={variant.stock}
-                              onChange={(e) => handleVariantChange(variant.id, 'stock', e.target.value)}
-                              className="flex-1 p-3 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                            />
-                            {productVariants.length > 1 && (
-                              <button
-                                type="button"
-                                onClick={() => removeVariant(variant.id)}
-                                className="p-3 text-red-500 hover:bg-red-50 rounded-lg"
-                              >
-                                <FiMinus className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-
-                      <button
-                        type="button"
-                        onClick={addVariant}
-                        className="w-full p-3 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-400 hover:text-orange-600 flex items-center justify-center gap-2"
-                      >
-                        <FiPlus className="w-4 h-4" />
-                        Tambah Stok
-                      </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Weight (kg)
+                        </label>
+                        <input
+                          type="text"
+                          name="shippingWeight"
+                          value={productData.shippingWeight}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 2.0 kg"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Length (cm)
+                        </label>
+                        <input
+                          type="text"
+                          name="shippingLength"
+                          value={productData.shippingLength}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 30 cm"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Width (cm)
+                        </label>
+                        <input
+                          type="text"
+                          name="shippingWidth"
+                          value={productData.shippingWidth}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 20 cm"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Height (cm)
+                        </label>
+                        <input
+                          type="text"
+                          name="shippingHeight"
+                          value={productData.shippingHeight}
+                          onChange={handleInputChange}
+                          placeholder="e.g. 15 cm"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Reviews Section - No reviews state */}
-                  <div className="bg-gray-50 rounded-lg p-8 text-center">
-                    <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <FiX className="w-8 h-8 text-gray-400" />
+                  {/* Warranty and Return Policy */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Warranty
+                      </label>
+                      <input
+                        type="text"
+                        name="warranty"
+                        value={productData.warranty}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 1 Year"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
                     </div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">Tidak ada review untuk produk ini</h4>
-                    <p className="text-sm text-gray-600">
-                      Beri tahu untuk meminta kepada pelanggan untuk menggunakan fitur ini.
-                    </p>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Return Policy
+                      </label>
+                      <input
+                        type="text"
+                        name="returnPolicy"
+                        value={productData.returnPolicy}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 30 Days"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      name="tags"
+                      value={productData.tags}
+                      onChange={handleInputChange}
+                      placeholder="Enter tags separated by commas (e.g., electronics, gadget, new)"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* SEO Information */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <FiPackage className="w-5 h-5 text-gray-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">SEO Information</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Meta Title
+                        </label>
+                        <input
+                          type="text"
+                          name="metaTitle"
+                          value={productData.metaTitle}
+                          onChange={handleInputChange}
+                          placeholder="Enter meta title for SEO"
+                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Meta Description
+                        </label>
+                        <textarea
+                          name="metaDescription"
+                          value={productData.metaDescription}
+                          onChange={handleInputChange}
+                          placeholder="Enter meta description for SEO"
+                          rows={3}
+                          className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -517,9 +792,20 @@ export default function AddProductPage() {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2 disabled:opacity-50"
             >
-              Simpan
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <FiSave className="w-4 h-4" />
+                  Simpan
+                </>
+              )}
             </button>
           </div>
         </div>

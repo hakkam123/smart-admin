@@ -8,8 +8,7 @@ import { useAuth } from '@clerk/nextjs';
 import {
   FiArrowLeft,
   FiUpload,
-  FiImage,
-  FiX,
+  FiImage
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -24,8 +23,8 @@ export default function EditCategoryPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    image: '', // Current image URL
-    imageFile: null, // New file to upload (if any)
+    image: '',
+    imageFile: null, 
     status: 'active',
     slug: '',
     metaTitle: '',

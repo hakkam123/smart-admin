@@ -4,96 +4,71 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { 
+import { useAuth } from '@clerk/nextjs';
+import {
   FiArrowLeft,
-  FiEdit,
-  FiShare2,
-  FiHeart,
   FiStar,
-  FiPackage,
-  FiTruck,
-  FiShield,
   FiInfo,
   FiEye,
-  FiDollarSign
+  FiTrash2
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function ProductDetailPage() {
+  const { getToken } = useAuth();
   const params = useParams();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('general');
   const [productData, setProductData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock product data - in real app, this would come from API
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const mockProductData = {
-        id: params.id,
-        name: 'Wireless Bluetooth Headphones Premium',
-        description: 'High-quality wireless Bluetooth headphones with noise cancellation feature, comfortable design, and premium sound quality. Perfect for music lovers and professionals.',
-        category: 'electronics',
-        categoryLabel: 'Electronics',
-        price: 299000,
-        stock: 45,
-        weight: '250g',
-        dimensions: '20cm x 18cm x 8cm',
-        model: 'WBH-Pro-2024',
-        additionalInfo: 'Garansi resmi 1 tahun, battery life hingga 30 jam, fast charging 15 menit untuk 3 jam penggunaan. Kompatibel dengan semua device Bluetooth 5.0 dan dilengkapi dengan carrying case premium.',
-        status: 'published',
-        // Advanced fields
-        sku: 'WBH-001-2024',
-        barcode: '1234567890123',
-        minStock: 10,
-        shippingWeight: '350g',
-        shippingLength: '25cm',
-        shippingWidth: '20cm',
-        shippingHeight: '10cm',
-        warranty: '1 Year Official Warranty',
-        returnPolicy: '7 days return policy',
-        tags: 'wireless, bluetooth, headphones, audio, music',
-        metaTitle: 'Premium Wireless Bluetooth Headphones - Best Audio Quality',
-        metaDescription: 'Shop premium wireless Bluetooth headphones with noise cancellation. High-quality audio, comfortable design, long battery life.',
-        images: [
-          { id: 1, url: '/api/placeholder/400/300', isMain: true },
-          { id: 2, url: '/api/placeholder/400/300', isMain: false },
-          { id: 3, url: '/api/placeholder/400/300', isMain: false },
-          { id: 4, url: '/api/placeholder/400/300', isMain: false }
-        ],
-        variants: [
-          { id: 1, variant: 'Black Edition', stock: 15 },
-          { id: 2, variant: 'White Edition', stock: 12 },
-          { id: 3, variant: 'Silver Edition', stock: 8 },
-          { id: 4, variant: 'Rose Gold', stock: 10 }
-        ],
-        reviews: [
-          {
-            id: 1,
-            customer: 'John Doe',
-            rating: 5,
-            comment: 'Excellent sound quality and very comfortable to wear.',
-            date: '2024-10-20'
-          },
-          {
-            id: 2,
-            customer: 'Jane Smith',
-            rating: 4,
-            comment: 'Good product, fast delivery. Recommended!',
-            date: '2024-10-18'
+  const loadProductData = React.useCallback(async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.get(`${baseUrl}/api/store/product/${params.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // API response structure has product data inside a "product" field
+      if (response.data && response.data.product) {
+        const product = response.data.product;
+
+        // Map API response to expected format
+        setProductData({
+          ...product,
+          categoryLabel: product.category?.name || product.category,
+          images: product.images?.map((url, index) => ({
+            id: index + 1,
+            url: url,
+            isMain: index === 0
+          })) || [],
+          variants: product.variants || [],
+          reviews: product.reviews || [],
+          // Default statistics if not provided
+          statistics: {
+            totalSold: product.totalSold || 0,
+            totalRevenue: product.totalRevenue || 0,
+            averageRating: product.averageRating || 0,
+            totalReviews: product.totalReviews || 0
           }
-        ],
-        statistics: {
-          totalSold: 156,
-          totalRevenue: 46644000,
-          averageRating: 4.7,
-          totalReviews: 23
-        }
-      };
-      setProductData(mockProductData);
+        });
+      } else {
+        console.error('Product data not found in response:', response.data);
+        toast.error('Product not found');
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Failed to fetch product data');
+      console.error('Error loading product data:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [params.id]);
+    }
+  }, [getToken, params.id]);
+
+  useEffect(() => {
+    loadProductData();
+  }, [loadProductData]);
 
   if (loading) {
     return (
@@ -117,7 +92,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const mainImage = productData.images.find(img => img.isMain) || productData.images[0];
+  const mainImage = productData.images.find(img => img.isMain) || (productData.images.length > 0 ? productData.images[0] : null);
   const additionalImages = productData.images.filter(img => !img.isMain);
 
   const formatCurrency = (amount) => {
@@ -126,6 +101,30 @@ export default function ProductDetailPage() {
       currency: 'IDR',
       minimumFractionDigits: 0
     }).format(amount);
+  };
+
+  const deleteProduct = async () => {
+    if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.delete(`${baseUrl}/api/store/product/${params.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.message) {
+        toast.success('Product deleted successfully');
+        router.push('/admin/products'); // Redirect to products list
+      } else {
+        toast.error(response.data.message || 'Failed to delete product');
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Error deleting product');
+      console.error('Error deleting product:', error);
+    }
   };
 
   return (
@@ -151,6 +150,13 @@ export default function ProductDetailPage() {
             Edit Product
           </Link>
 
+          <button
+            onClick={deleteProduct}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+          >
+            <FiTrash2 className="w-4 h-4" />
+            Delete Product
+          </button>
         </div>
       </div>
 
@@ -312,7 +318,7 @@ export default function ProductDetailPage() {
                         <h3 className="text-lg font-semibold text-gray-900">Product Variants</h3>
                         <FiInfo className="w-4 h-4 text-gray-400" />
                       </div>
-                      
+
                       <div className="space-y-3">
                         {productData.variants.map((variant) => (
                           <div key={variant.id} className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
@@ -450,8 +456,8 @@ export default function ProductDetailPage() {
                     Publication Status
                   </label>
                   <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                    productData.status === 'published' 
-                      ? 'bg-green-100 text-green-800' 
+                    productData.status === 'published'
+                      ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}>
                     {productData.status === 'published' ? 'Published' : 'Draft'}
@@ -462,18 +468,48 @@ export default function ProductDetailPage() {
                     Stock Status
                   </label>
                   <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
-                    productData.stock > productData.minStock 
-                      ? 'bg-green-100 text-green-800' 
+                    productData.stock > productData.minStock
+                      ? 'bg-green-100 text-green-800'
                       : productData.stock > 0
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {productData.stock > productData.minStock 
-                      ? 'In Stock' 
+                    {productData.stock > productData.minStock
+                      ? 'In Stock'
                       : productData.stock > 0
                       ? 'Low Stock'
                       : 'Out of Stock'}
                   </span>
+                </div>
+              </div>
+            </div>
+
+            {/* SEO Information */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Information</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                  <p className="text-sm text-gray-900">{productData.metaTitle}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
+                  <p className="text-sm text-gray-700">{productData.metaDescription}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                  <div className="flex flex-wrap gap-1">
+                    {productData.tags && productData.tags !== '' ?
+                      productData.tags.split(', ').map((tag, index) => (
+                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                          {tag}
+                        </span>
+                      )) :
+                      <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
+                        No tags
+                      </span>
+                    }
+                  </div>
                 </div>
               </div>
             </div>

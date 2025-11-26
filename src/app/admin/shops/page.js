@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@clerk/nextjs';
 import { 
-  FiEdit,
-  FiUser,
   FiMail,
   FiPhone,
   FiMapPin,
@@ -13,74 +12,98 @@ import {
   FiShoppingBag,
   FiTrendingUp,
   FiCalendar,
-  FiAlertCircle,
   FiCheckCircle,
   FiClock,
   FiFileText,
-  FiEye,
-  FiDownload,
   FiExternalLink
 } from 'react-icons/fi';
 
+import toast from 'react-hot-toast';
+import axios from 'axios';
+
 export default function ShopsPage() {
-  const [shopData] = useState({
-    name: 'Hakkam Store',
-    ownerName: 'Hakkam Robbani',
-    address: 'Jl. Lodaya, Kota Bogor',
-    email: 'hakkam@botmail.com',
-    phone: '+62 812 3456 7890',
-    website: 'https://hakkamstore.com',
-    description: 'Premium electronics and gadgets store specializing in quality products with excellent customer service.',
-    status: 'active',
+  const { getToken } = useAuth();
+  const [shopData, setShopData] = useState({
+    name: '',
+    ownerName: '',
+    address: '',
+    email: '',
+    phone: '',
+    website: '',
+    description: '',
+    status: '',
     statusReason: '',
     shopImage: '/api/placeholder/150/150',
-    category: 'Electronics',
-    establishedDate: '2022-01-15',
-    businessLicense: 'BL-2022-001234',
-    taxId: 'TAX-567890123'
+    category: '',
+    createdAt: '',
   });
-
-  const [stats] = useState({
-    totalOrders: 420,
-    totalSales: 69,
-    reportsAgainst: 420,
-    reportsMade: 69,
-    lastLogin: 'Tomorrow',
-    avgRating: 4.8,
-    totalProducts: 156,
-    activeProducts: 142
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalSales: 0,
+    reportsAgainst: 0,
+    reportsMade: 0,
+    avgRating: 0,
+    totalProducts: 0,
+    activeProducts: 0
   });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [recentActivity] = useState([
-    {
-      id: 1,
-      type: 'order',
-      description: 'New order #ORD-2024-891 received',
-      timestamp: '2024-10-22T10:30:00Z',
-      amount: '$89.99'
-    },
-    {
-      id: 2,
-      type: 'product',
-      description: 'Added new product: Wireless Earbuds Pro',
-      timestamp: '2024-10-22T09:15:00Z',
-      amount: null
-    },
-    {
-      id: 3,
-      type: 'review',
-      description: 'Received 5-star review from customer',
-      timestamp: '2024-10-22T08:45:00Z',
-      amount: null
-    },
-    {
-      id: 4,
-      type: 'payment',
-      description: 'Payment processed for order #ORD-2024-890',
-      timestamp: '2024-10-21T16:20:00Z',
-      amount: '$156.50'
+  // Fetch shop data when component mounts
+  useEffect(() => {
+    loadShopData();
+  }, [loadShopData]);
+
+  const loadShopData = React.useCallback(async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.get(`${baseUrl}/api/store`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const storeData = response.data.data;
+        
+        // Set shop data
+        setShopData({
+          name: storeData.name,
+          ownerName: storeData.user?.name || '',
+          address: storeData.address,
+          email: storeData.email,
+          phone: storeData.contact,
+          website: storeData.website || '',
+          description: storeData.description,
+          status: storeData.status,
+          statusReason: storeData.statusReason || '',
+          shopImage: storeData.logo || '/api/placeholder/150/150',
+          category: storeData.category?.name || 'General',
+          createdAt: storeData.createdAt ? new Date(storeData.createdAt).toISOString().split('T')[0] : '',
+        });
+
+        // Set stats
+        setStats({
+          totalOrders: storeData.totalOrders || 0,
+          totalSales: storeData.totalSales || 0,
+          reportsAgainst: 0, // API doesn't provide this info directly
+          reportsMade: 0, // API doesn't provide this info directly
+          avgRating: storeData.avgRating || 0,
+          totalProducts: storeData.totalProducts || 0,
+          activeProducts: storeData.activeProducts || 0
+        });
+
+        // Set recent activity if available in API response
+        // This would depend on whether the API provides activity data
+        // For now, we'll use mock data or leave empty
+        setRecentActivity(storeData.activity || []);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Failed to fetch shop data');
+      console.error('Error loading shop data:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }, [getToken]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -115,6 +138,14 @@ export default function ShopsPage() {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -164,14 +195,6 @@ export default function ShopsPage() {
             <div className="mt-6 space-y-4">
               <div className="text-sm">
                 <div className="flex items-center text-gray-600 mb-1">
-                  <FiClock className="h-4 w-4 mr-2" />
-                  Last Login
-                </div>
-                <p className="font-medium text-gray-900">{stats.lastLogin}</p>
-              </div>
-              
-              <div className="text-sm">
-                <div className="flex items-center text-gray-600 mb-1">
                   <FiShoppingBag className="h-4 w-4 mr-2" />
                   Total Orders
                 </div>
@@ -213,9 +236,6 @@ export default function ShopsPage() {
                 <span className="text-sm font-medium text-green-600">{stats.activeProducts}</span>
               </div>
             </div>
-            <button className="w-full mt-4 px-4 py-2 text-sm text-orange-600 border border-orange-600 rounded-md hover:bg-orange-50">
-              See Reports History
-            </button>
           </div>
         </div>
 
@@ -238,7 +258,7 @@ export default function ShopsPage() {
                 <p className="text-gray-900">{shopData.ownerName}</p>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                 <div className="flex items-center">
                   <FiMapPin className="h-4 w-4 text-gray-400 mr-2" />
@@ -262,7 +282,7 @@ export default function ShopsPage() {
                 </div>
               </div>
 
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
                 <div className="flex items-center">
                   <FiGlobe className="h-4 w-4 text-gray-400 mr-2" />
@@ -275,6 +295,25 @@ export default function ShopsPage() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <p className="text-gray-900">{shopData.description}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Information */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Business Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                <p className="text-gray-900">{shopData.category}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Established Date</label>
+                <div className="flex items-center">
+                  <FiCalendar className="h-4 w-4 text-gray-400 mr-2" />
+                  <p className="text-gray-900">{new Date(shopData.createdAt).toLocaleDateString()}</p>
+                </div>
               </div>
             </div>
           </div>
