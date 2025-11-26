@@ -36,6 +36,9 @@ export default function ShopsPage() {
     shopImage: '/api/placeholder/150/150',
     category: '',
     createdAt: '',
+    bankAccountNumber: '',
+    bankName: '',
+    bankHolderName: '',
   });
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -74,6 +77,9 @@ export default function ShopsPage() {
           shopImage: storeData.logo || '/api/placeholder/150/150',
           category: storeData.category?.name || 'General',
           createdAt: storeData.createdAt ? new Date(storeData.createdAt).toISOString().split('T')[0] : '',
+          bankAccountNumber: storeData.bankAccountNumber || '',
+          bankName: storeData.bankName || '',
+          bankHolderName: storeData.bankHolderName || '',
         });
 
         // Set stats
@@ -332,6 +338,25 @@ export default function ShopsPage() {
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status Change Reason</label>
                 <p className="text-gray-900">{shopData.statusReason || 'No status change reason provided'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Account Information */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Bank Account Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                <p className="text-gray-900">{shopData.bankName || 'Not provided'}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder Name</label>
+                <p className="text-gray-900">{shopData.bankHolderName || 'Not provided'}</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                <p className="text-gray-900">{shopData.bankAccountNumber || 'Not provided'}</p>
               </div>
             </div>
           </div>

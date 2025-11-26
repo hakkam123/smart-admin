@@ -27,6 +27,9 @@ export default function EditShopPage({ params }) {
     website: '',
     description: '',
     shopImage: '/api/placeholder/150/150',
+    bankAccountNumber: '',
+    bankName: '',
+    bankHolderName: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -55,6 +58,9 @@ export default function EditShopPage({ params }) {
           website: storeData.website || '',
           description: storeData.description,
           shopImage: storeData.logo || '/api/placeholder/150/150',
+          bankAccountNumber: storeData.bankAccountNumber || '',
+          bankName: storeData.bankName || '',
+          bankHolderName: storeData.bankHolderName || '',
         });
       }
     } catch (error) {
@@ -144,6 +150,9 @@ export default function EditShopPage({ params }) {
       storeData.append('contact', shopData.phone);
       storeData.append('address', shopData.address);
       storeData.append('website', shopData.website || '');
+      storeData.append('bankAccountNumber', shopData.bankAccountNumber || '');
+      storeData.append('bankName', shopData.bankName || '');
+      storeData.append('bankHolderName', shopData.bankHolderName || '');
 
       // Add image if provided
       if (shopData.shopImageFile) {
@@ -368,6 +377,51 @@ export default function EditShopPage({ params }) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Describe your shop and what you sell"
                 ></textarea>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Information */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Bank Account Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankName}
+                  onChange={(e) => handleInputChange('bankName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter bank name (e.g. BCA, BNI, etc.)"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Account Holder Name
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankHolderName}
+                  onChange={(e) => handleInputChange('bankHolderName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter account holder name"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bank Account Number
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankAccountNumber}
+                  onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter bank account number"
+                />
               </div>
             </div>
           </div>
