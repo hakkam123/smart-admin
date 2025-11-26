@@ -3,27 +3,21 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
+import { useAuth } from '@clerk/nextjs';
+import {
   FiArrowLeft,
-  FiUser,
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiGlobe,
-  FiShoppingBag,
-  FiTrendingUp,
-  FiCalendar,
-  FiAlertCircle,
-  FiCheckCircle,
-  FiClock,
-  FiFileText,
+  FiSave,
+  FiX,
   FiCamera,
-  FiExternalLink,
-  FiUpload,
   FiTrash2
 } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 export default function EditShopPage({ params }) {
+  const { getToken } = useAuth();
+  const router = useRouter();
   const [shopData, setShopData] = useState({
     name: '',
     ownerName: '',
@@ -32,82 +26,44 @@ export default function EditShopPage({ params }) {
     phone: '',
     website: '',
     description: '',
-    status: 'active',
-    statusReason: '',
     shopImage: '/api/placeholder/150/150',
-    category: 'Electronics',
-    establishedDate: '',
-    businessLicense: '',
-    taxId: '',
-    // Additional fields for comprehensive shop management
-    socialMedia: {
-      facebook: '',
-      instagram: '',
-      twitter: ''
-    },
-    businessHours: {
-      monday: { open: '09:00', close: '18:00', isOpen: true },
-      tuesday: { open: '09:00', close: '18:00', isOpen: true },
-      wednesday: { open: '09:00', close: '18:00', isOpen: true },
-      thursday: { open: '09:00', close: '18:00', isOpen: true },
-      friday: { open: '09:00', close: '18:00', isOpen: true },
-      saturday: { open: '10:00', close: '16:00', isOpen: true },
-      sunday: { open: '10:00', close: '16:00', isOpen: false }
-    },
-    paymentMethods: ['credit_card', 'bank_transfer', 'cash_on_delivery'],
-    shippingZones: ['jakarta', 'bogor', 'depok', 'tangerang', 'bekasi']
   });
 
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Load shop data if editing existing shop
+  // Load shop data when component mounts
   useEffect(() => {
-    if (params?.id) {
-      // In real app, fetch shop data by ID
-      loadShopData(params.id);
-    }
-  }, [params?.id]);
+    loadShopData();
+  }, []);
 
-  const loadShopData = async (shopId) => {
+  const loadShopData = async () => {
     setLoading(true);
     try {
-      // Simulate API call - replace with real API
-      const mockData = {
-        name: 'Hakkam Store',
-        ownerName: 'Hakkam Robbani',
-        address: 'Jl. Lodaya, Kota Bogor',
-        email: 'hakkam@botmail.com',
-        phone: '+62 812 3456 7890',
-        website: 'https://hakkamstore.com',
-        description: 'Premium electronics and gadgets store specializing in quality products with excellent customer service.',
-        status: 'active',
-        statusReason: '',
-        shopImage: '/api/placeholder/150/150',
-        category: 'Electronics',
-        establishedDate: '2022-01-15',
-        businessLicense: 'BL-2022-001234',
-        taxId: 'TAX-567890123',
-        socialMedia: {
-          facebook: 'https://facebook.com/hakkamstore',
-          instagram: '@hakkamstore',
-          twitter: '@hakkamstore'
-        },
-        businessHours: {
-          monday: { open: '09:00', close: '18:00', isOpen: true },
-          tuesday: { open: '09:00', close: '18:00', isOpen: true },
-          wednesday: { open: '09:00', close: '18:00', isOpen: true },
-          thursday: { open: '09:00', close: '18:00', isOpen: true },
-          friday: { open: '09:00', close: '18:00', isOpen: true },
-          saturday: { open: '10:00', close: '16:00', isOpen: true },
-          sunday: { open: '10:00', close: '16:00', isOpen: false }
-        },
-        paymentMethods: ['credit_card', 'bank_transfer', 'cash_on_delivery'],
-        shippingZones: ['jakarta', 'bogor', 'depok', 'tangerang', 'bekasi']
-      };
-      setShopData(mockData);
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.get(`${baseUrl}/api/store`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const storeData = response.data.data;
+
+        // Map API response to shopData format
+        setShopData({
+          name: storeData.name,
+          ownerName: storeData.user?.name || '',
+          address: storeData.address,
+          email: storeData.email,
+          phone: storeData.contact,
+          website: storeData.website || '',
+          description: storeData.description,
+          shopImage: storeData.logo || '/api/placeholder/150/150',
+        });
+      }
     } catch (error) {
+      toast.error(error?.response?.data?.message || error.message || 'Failed to fetch shop data');
       console.error('Error loading shop data:', error);
     } finally {
       setLoading(false);
@@ -128,38 +84,6 @@ export default function EditShopPage({ params }) {
     }
   };
 
-  const handleNestedInputChange = (parent, field, value) => {
-    setShopData(prev => ({
-      ...prev,
-      [parent]: {
-        ...prev[parent],
-        [field]: value
-      }
-    }));
-  };
-
-  const handleBusinessHoursChange = (day, field, value) => {
-    setShopData(prev => ({
-      ...prev,
-      businessHours: {
-        ...prev.businessHours,
-        [day]: {
-          ...prev.businessHours[day],
-          [field]: value
-        }
-      }
-    }));
-  };
-
-  const handleArrayFieldChange = (field, value, isChecked) => {
-    setShopData(prev => ({
-      ...prev,
-      [field]: isChecked 
-        ? [...prev[field], value]
-        : prev[field].filter(item => item !== value)
-    }));
-  };
-
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -168,7 +92,8 @@ export default function EditShopPage({ params }) {
         setImagePreview(reader.result);
         setShopData(prev => ({
           ...prev,
-          shopImage: reader.result
+          shopImage: reader.result,
+          shopImageFile: file // Store the actual file for upload
         }));
       };
       reader.readAsDataURL(file);
@@ -177,21 +102,19 @@ export default function EditShopPage({ params }) {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!shopData.name.trim()) newErrors.name = 'Shop name is required';
     if (!shopData.ownerName.trim()) newErrors.ownerName = 'Owner name is required';
     if (!shopData.email.trim()) newErrors.email = 'Email is required';
     if (!shopData.phone.trim()) newErrors.phone = 'Phone number is required';
     if (!shopData.address.trim()) newErrors.address = 'Address is required';
-    if (!shopData.category) newErrors.category = 'Category is required';
-    if (!shopData.establishedDate) newErrors.establishedDate = 'Established date is required';
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (shopData.email && !emailRegex.test(shopData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-    
+
     // Phone validation
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
     if (shopData.phone && !phoneRegex.test(shopData.phone.replace(/\s/g, ''))) {
@@ -209,34 +132,49 @@ export default function EditShopPage({ params }) {
 
     setLoading(true);
     try {
-      console.log('Saving shop data:', shopData);
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      alert('Shop information updated successfully!');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
       
+      // Prepare form data for API request
+      const storeData = new FormData();
+      storeData.append('name', shopData.name);
+      storeData.append('username', shopData.name.toLowerCase().replace(/\s+/g, '_')); // Create a username from name
+      storeData.append('description', shopData.description);
+      storeData.append('email', shopData.email);
+      storeData.append('contact', shopData.phone);
+      storeData.append('address', shopData.address);
+      storeData.append('website', shopData.website || '');
+
+      // Add image if provided
+      if (shopData.shopImageFile) {
+        storeData.append('logo', shopData.shopImageFile);
+      }
+
+      const response = await axios.put(`${baseUrl}/api/store`, storeData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        toast.success('Shop information updated successfully!');
+        router.push(`/admin/shops`);
+      } else {
+        toast.error(response.data.message || 'Failed to update shop');
+        console.error('API error:', response.data);
+      }
     } catch (error) {
-      console.error('Error saving shop data:', error);
-      alert('Error saving shop data. Please try again.');
+      toast.error(error?.response?.data?.message || error.message || 'Error updating shop');
+      console.error('Error updating shop data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'inactive':
-        return 'bg-red-100 text-red-800';
-      case 'suspended':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'pending':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
-  if (loading && !shopData.name) {
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-500"></div>
@@ -249,7 +187,12 @@ export default function EditShopPage({ params }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-
+          <Link
+            href="/admin/shops"
+            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg"
+          >
+            <FiArrowLeft className="h-5 w-5" />
+          </Link>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
               {params?.id ? 'Edit Shop' : 'Edit Shop'}
@@ -266,7 +209,7 @@ export default function EditShopPage({ params }) {
           >
             Cancel
           </Link>
-          <button 
+          <button
             onClick={handleSave}
             disabled={loading}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50"
@@ -303,30 +246,26 @@ export default function EditShopPage({ params }) {
                 </label>
               </div>
               <div className="mt-4 space-y-2">
-                <button
-                  type="button"
-                  className="w-full px-3 py-2 text-sm border text-gray-600 border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  <FiUpload className="inline h-4 w-4 mr-2" />
-                  Upload Image
-                </button>
                 {imagePreview && (
                   <button
                     type="button"
                     onClick={() => {
                       setImagePreview(null);
-                      setShopData(prev => ({ ...prev, shopImage: '/api/placeholder/150/150' }));
+                      setShopData(prev => ({
+                        ...prev,
+                        shopImage: '',
+                        shopImageFile: null
+                      }));
                     }}
                     className="w-full px-3 py-2 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50"
                   >
                     <FiTrash2 className="inline h-4 w-4 mr-2" />
-                    Remove
+                    Remove Image
                   </button>
                 )}
               </div>
             </div>
           </div>
-
         </div>
 
         {/* Main Content */}
@@ -337,15 +276,13 @@ export default function EditShopPage({ params }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Shop Name <span className="text-red-500">*</span>
+                  Shop Name *
                 </label>
                 <input
-                  type="text"   
+                  type="text"
                   value={shopData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter shop name"
                 />
                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -353,15 +290,13 @@ export default function EditShopPage({ params }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Owner Name <span className="text-red-500">*</span>
+                  Owner Name *
                 </label>
                 <input
                   type="text"
                   value={shopData.ownerName}
                   onChange={(e) => handleInputChange('ownerName', e.target.value)}
-                  className={`w-full px-3 py-2 border text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.ownerName ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border ${errors.ownerName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter owner name"
                 />
                 {errors.ownerName && <p className="mt-1 text-sm text-red-600">{errors.ownerName}</p>}
@@ -369,31 +304,27 @@ export default function EditShopPage({ params }) {
 
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Address <span className="text-red-500">*</span>
+                  Address *
                 </label>
-                <textarea
+                <input
+                  type="text"
                   value={shopData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  rows={3}
-                  className={`w-full px-3 py-2 border text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.address ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter complete address"
+                  className={`w-full px-3 py-2 border ${errors.address ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
+                  placeholder="Enter full address"
                 />
                 {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email <span className="text-red-500">*</span>
+                  Email *
                 </label>
                 <input
                   type="email"
                   value={shopData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full px-3 py-2 border  text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter email address"
                 />
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
@@ -401,166 +332,42 @@ export default function EditShopPage({ params }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number <span className="text-red-500">*</span>
+                  Phone Number *
                 </label>
                 <input
                   type="tel"
                   value={shopData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`w-full px-3 py-2 border text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border ${errors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500`}
                   placeholder="Enter phone number"
                 />
                 {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
               </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Website
+                </label>
                 <input
                   type="url"
                   value={shopData.website}
                   onChange={(e) => handleInputChange('website', e.target.value)}
-                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="https://yourshop.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="https://example.com"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
                 <textarea
                   value={shopData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Describe your shop and what you sell..."
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Business Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Business Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={shopData.category}
-                  onChange={(e) => handleInputChange('category', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.category ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Select category</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Home & Garden">Home & Garden</option>
-                  <option value="Sports">Sports</option>
-                  <option value="Books">Books</option>
-                  <option value="Food & Beverage">Food & Beverage</option>
-                  <option value="Health & Beauty">Health & Beauty</option>
-                  <option value="Automotive">Automotive</option>
-                  <option value="Other">Other</option>
-                </select>
-                {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Established Date <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  value={shopData.establishedDate}
-                  onChange={(e) => handleInputChange('establishedDate', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md text-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.establishedDate ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                />
-                {errors.establishedDate && <p className="mt-1 text-sm text-red-600">{errors.establishedDate}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Business License</label>
-                <input
-                  type="text"
-                  value={shopData.businessLicense}
-                  onChange={(e) => handleInputChange('businessLicense', e.target.value)}
-                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter business license number"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tax ID</label>
-                <input
-                  type="text"
-                  value={shopData.taxId}
-                  onChange={(e) => handleInputChange('taxId', e.target.value)}
-                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                  placeholder="Enter tax identification number"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Business Hours */}
-          {/* <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Business Hours</h2>
-            <div className="space-y-4">
-              {Object.entries(shopData.businessHours).map(([day, hours]) => (
-                <div key={day} className="flex items-center space-x-4">
-                  <div className="w-24">
-                    <span className="text-sm font-medium text-gray-700 capitalize">{day}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={hours.isOpen}
-                      onChange={(e) => handleBusinessHoursChange(day, 'isOpen', e.target.checked)}
-                      className="rounded border-gray-300 text-gray-600 text-orange-600 focus:ring-orange-500"
-                    />
-                    <span className="text-sm text-gray-600">Open</span>
-                  </div>
-                  {hours.isOpen && (
-                    <>
-                      <input
-                        type="time"
-                        value={hours.open}
-                        onChange={(e) => handleBusinessHoursChange(day, 'open', e.target.value)}
-                        className="px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <input
-                        type="time"
-                        value={hours.close}
-                        onChange={(e) => handleBusinessHoursChange(day, 'close', e.target.value)}
-                        className="px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                      />
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div> */}
-
-          {/* Status Management */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Status Management</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={shopData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border text-gray-600 border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Describe your shop and what you sell"
+                ></textarea>
               </div>
             </div>
           </div>
