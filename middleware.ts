@@ -22,8 +22,11 @@ export default clerkMiddleware(async (auth, req) => {
 
   // ✅ Tambahkan header CORS untuk semua endpoint API
   if (req.nextUrl.pathname.startsWith('/api')) {
-    res.headers.set('Access-Control-Allow-Origin', '*')
-    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    // allow the actual request origin (required when using credentials)
+    const origin = req.headers.get('origin') || '*'
+    res.headers.set('Access-Control-Allow-Origin', origin)
+    res.headers.set('Access-Control-Allow-Credentials', 'true')
+    res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH')
     res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -24,6 +24,7 @@ import {
 } from 'react-icons/fi';
 
 export default function UserDetailPage({ params }) {
+  const unwrappedParams = use(params);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -135,7 +136,7 @@ export default function UserDetailPage({ params }) {
       try {
         // Replace with actual API call
         await new Promise(resolve => setTimeout(resolve, 800));
-        const foundUser = mockUsersData.find(u => u.id === params.id);
+        const foundUser = mockUsersData.find(u => u.id === unwrappedParams.id);
         setUser(foundUser);
       } catch (error) {
         console.error('Error fetching user:', error);
@@ -144,10 +145,10 @@ export default function UserDetailPage({ params }) {
       }
     };
 
-    if (params.id) {
+    if (unwrappedParams.id) {
       fetchUser();
     }
-  }, [params.id]);
+  }, [unwrappedParams.id]);
 
   const getStatusColor = (status) => {
     switch (status) {

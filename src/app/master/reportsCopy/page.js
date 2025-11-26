@@ -1,8 +1,6 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
 import { 
   FiAlertTriangle,
@@ -13,8 +11,6 @@ import {
   FiMessageSquare,
   FiShoppingBag,
   FiPackage,
-  FiChevronLeft,
-  FiChevronRight,
   FiUser,
   FiCalendar,
   FiClock,
@@ -30,45 +26,114 @@ export default function ReportsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-  const { getToken } = useAuth();
 
   useEffect(() => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+    // Mock reports data - replace with actual API call
+    const mockReports = [
+      {
+        id: '1',
+        reporterName: 'John Doe',
+        reporterEmail: 'john.doe@email.com',
+        reportType: 'shop',
+        targetName: 'Jane Fashion Store',
+        targetId: 'shop_2',
+        subject: 'Produk tidak sesuai deskripsi',
+        message: 'Saya membeli dress dari toko ini tetapi yang dikirim berbeda dengan foto. Ukuran tidak sesuai dan bahan terasa murahan. Saya merasa tertipu dengan iklan yang ditampilkan.',
+        priority: 'high',
+        status: 'new',
+        submittedAt: '2024-01-21T14:30:00Z',
+        category: 'Product Quality',
+        attachments: ['evidence1.jpg', 'evidence2.jpg']
+      },
+      {
+        id: '2',
+        reporterName: 'Sarah Wilson',
+        reporterEmail: 'sarah.wilson@email.com',
+        reportType: 'product',
+        targetName: 'Wireless Headphones Pro Max',
+        targetId: 'product_156',
+        subject: 'Produk rusak saat diterima',
+        message: 'Headphone yang saya terima dalam kondisi rusak. Bagian ear cup kiri tidak berfungsi dengan baik dan ada retakan pada headband. Packaging juga terlihat sudah pernah dibuka sebelumnya.',
+        priority: 'medium',
+        status: 'reviewed',
+        submittedAt: '2024-01-20T11:15:00Z',
+        reviewedAt: '2024-01-21T09:30:00Z',
+        category: 'Product Damage',
+        attachments: ['damage_photo.jpg']
+      },
+      {
+        id: '3',
+        reporterName: 'Ahmad Rahman',
+        reporterEmail: 'ahmad.rahman@email.com',
+        reportType: 'shop',
+        targetName: 'Tech Solutions Store',
+        targetId: 'shop_5',
+        subject: 'Pelayanan customer service buruk',
+        message: 'Customer service dari toko ini sangat tidak responsif. Sudah 3 hari saya menanyakan status pengiriman tetapi tidak ada respon sama sekali. Chat diabaikan dan phone tidak diangkat.',
+        priority: 'medium',
+        status: 'resolved',
+        submittedAt: '2024-01-19T16:45:00Z',
+        reviewedAt: '2024-01-20T10:20:00Z',
+        resolvedAt: '2024-01-21T14:15:00Z',
+        category: 'Customer Service',
+        attachments: []
+      },
+      {
+        id: '4',
+        reporterName: 'Michael Chen',
+        reporterEmail: 'michael.chen@email.com',
+        reportType: 'product',
+        targetName: 'Smart Watch Series X',
+        targetId: 'product_89',
+        subject: 'Produk palsu/KW',
+        message: 'Smart watch yang saya beli ternyata barang KW/palsu. Build quality sangat buruk, fitur-fitur yang diiklankan tidak ada, dan logo brand terlihat tidak original. Ini jelas penipuan!',
+        priority: 'high',
+        status: 'new',
+        submittedAt: '2024-01-21T10:20:00Z',
+        category: 'Counterfeit Product',
+        attachments: ['fake_product1.jpg', 'fake_product2.jpg', 'original_comparison.jpg']
+      },
+      {
+        id: '5',
+        reporterName: 'Lisa Park',
+        reporterEmail: 'lisa.park@email.com',
+        reportType: 'shop',
+        targetName: 'Healthy Food Corner',
+        targetId: 'shop_8',
+        subject: 'Pengiriman terlambat dan makanan basi',
+        message: 'Pesanan makanan organic saya terlambat 2 hari dari jadwal. Ketika sampai, beberapa sayuran sudah layu dan buah-buahan ada yang busuk. Sangat kecewa dengan kualitas dan ketepatan waktu pengiriman.',
+        priority: 'high',
+        status: 'reviewed',
+        submittedAt: '2024-01-18T13:10:00Z',
+        reviewedAt: '2024-01-19T11:45:00Z',
+        category: 'Delivery Issue',
+        attachments: ['spoiled_food.jpg']
+      },
+      {
+        id: '6',
+        reporterName: 'David Kumar',
+        reporterEmail: 'david.kumar@email.com',
+        reportType: 'product',
+        targetName: 'Gaming Laptop Ultra',
+        targetId: 'product_245',
+        subject: 'Spesifikasi tidak sesuai iklan',
+        message: 'Laptop gaming yang saya beli ternyata spesifikasinya berbeda dengan yang diiklankan. RAM hanya 8GB bukan 16GB, dan VGA yang dipasang adalah model yang lebih rendah. Merasa dibohongi oleh seller.',
+        priority: 'medium',
+        status: 'new',
+        submittedAt: '2024-01-21T09:45:00Z',
+        category: 'False Advertisement',
+        attachments: ['spec_screenshot.jpg', 'actual_spec.jpg']
+      }
+    ];
 
+    // Simulate API call
     const fetchReports = async () => {
       setLoading(true);
       try {
-        const headers = {};
-        if (getToken) {
-          try {
-            const token = await getToken();
-            if (token) headers.Authorization = `Bearer ${token}`;
-          } catch (err) {
-            console.warn('Failed to get Clerk token', err);
-          }
-        }
-
-        const res = await axios.get(`${API_BASE}/api/admin/reports`, { headers });
-        if (res.data && res.data.reports) {
-          const normalized = res.data.reports.map(r => ({
-            ...r,
-            reportType: r.reportType ? String(r.reportType).toLowerCase() : r.reportType,
-            priority: r.priority ? String(r.priority).toLowerCase() : r.priority,
-            suggestedPriority: r.suggestedPriority ? String(r.suggestedPriority).toLowerCase() : r.suggestedPriority,
-            status: r.status ? String(r.status).toLowerCase() : r.status,
-            reporterName: r.reporter?.name || r.user?.name || r.reporterName || '',
-            reporterEmail: r.reporter?.email || r.user?.email || r.reporterEmail || '',
-            targetName: r.store?.name || r.product?.name || r.targetId?.name,
-          }));
-          console.log('Normalized reports:', normalized);
-          setReports(normalized);
-          setFilteredReports(normalized);
-        } else {
-          setReports([]);
-          setFilteredReports([]);
-        }
+        // Replace with actual API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setReports(mockReports);
+        setFilteredReports(mockReports);
       } catch (error) {
         console.error('Error fetching reports:', error);
       } finally {
@@ -77,20 +142,19 @@ export default function ReportsManagementPage() {
     };
 
     fetchReports();
-  }, [getToken]);
+  }, []);
 
   useEffect(() => {
     let filtered = reports;
 
     // Filter by search term
     if (searchTerm) {
-      const q = searchTerm.toLowerCase();
       filtered = filtered.filter(report =>
-        (report.reporterName || '').toLowerCase().includes(q) ||
-        (report.targetName || '').toLowerCase().includes(q) ||
-        (report.subject || '').toLowerCase().includes(q) ||
-        (report.message || '').toLowerCase().includes(q) ||
-        (report.category || '').toLowerCase().includes(q)
+        report.reporterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.targetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        report.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -100,7 +164,6 @@ export default function ReportsManagementPage() {
     }
 
     setFilteredReports(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
   }, [reports, searchTerm, typeFilter]);
 
   const getPriorityColor = (priority) => {
@@ -148,34 +211,12 @@ export default function ReportsManagementPage() {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'store':
+      case 'shop':
         return <FiShoppingBag className="h-4 w-4 text-blue-600" />;
       case 'product':
         return <FiPackage className="h-4 w-4 text-green-600" />;
       default:
         return <FiFlag className="h-4 w-4 text-gray-600" />;
-    }
-  };
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedReports = filteredReports.slice(startIndex, endIndex);
-
-  const goToPage = (page) => {
-    setCurrentPage(page);
-  };
-
-  const goToPrevious = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const goToNext = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
     }
   };
 
@@ -254,7 +295,7 @@ export default function ReportsManagementPage() {
                 className="block w-full pl-10 pr-10 py-2 border text-gray-500 border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-slate-500 focus:border-slate-500 sm:text-sm"
               >
                 <option value="all">All Types</option>
-                <option value="store">Store Reports</option>
+                <option value="shop">Shop Reports</option>
                 <option value="product">Product Reports</option>
               </select>
             </div>
@@ -289,7 +330,7 @@ export default function ReportsManagementPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedReports.map((report) => (
+              {filteredReports.map((report) => (
                 <tr key={report.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-start">
@@ -371,86 +412,6 @@ export default function ReportsManagementPage() {
                 : 'No reports have been submitted yet.'
               }
             </p>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {filteredReports.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-            <div className="flex flex-1 justify-between sm:hidden">
-              <button 
-                onClick={goToPrevious}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button 
-                onClick={goToNext}
-                disabled={currentPage === totalPages}
-                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(endIndex, filteredReports.length)}</span> of{' '}
-                  <span className="font-medium">{filteredReports.length}</span> results
-                </p>
-              </div>
-              <div>
-                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                  <button 
-                    onClick={goToPrevious}
-                    disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="sr-only">Previous</span>
-                    <FiChevronLeft className="h-5 w-5" />
-                  </button>
-                  
-                  {/* Page Numbers */}
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => goToPage(pageNum)}
-                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                          currentPage === pageNum
-                            ? 'z-10 bg-slate-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600'
-                            : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-
-                  <button 
-                    onClick={goToNext}
-                    disabled={currentPage === totalPages}
-                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="sr-only">Next</span>
-                    <FiChevronRight className="h-5 w-5" />
-                  </button>
-                </nav>
-              </div>
-            </div>
           </div>
         )}
       </div>

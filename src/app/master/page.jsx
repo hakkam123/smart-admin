@@ -21,7 +21,6 @@ export default function MasterDashboard() {
   const [recentReports, setRecentReports] = useState([]);
   const [recentServices, setRecentServices] = useState([]);
 
-  // Mock data
   useEffect(() => {
     const mockLiveOrders = [
       { id: '#10001', customer: 'John Doe', status: 'Processing', amount: 'Rp 1,255,000', time: '2 mins ago' },
@@ -95,32 +94,16 @@ export default function MasterDashboard() {
           <p className="text-gray-600">Master control panel overview and analytics</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
+          <button className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors">
             <FiCalendar className="mr-2" />
             {selectedPeriod}
           </button>
-          <button className="flex items-center px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700">
-            <FiFilter className="mr-2" />
+          <button className="finline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors">
             Export
           </button>
         </div>
       </div>
 
-    {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {masterStats.map((stat, index) => (
-        <div key={index} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className={`${stat.color} p-2 rounded-md w-10 h-10 flex items-center justify-center mb-3`}>
-                <stat.icon className="text-white" size={16} />
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{stat.title}</p>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div> */}
     <CardAdmin />
 
       {/* Main Content Grid */}
@@ -135,7 +118,7 @@ export default function MasterDashboard() {
               <select 
                 value={selectedPeriod} 
                 onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="px-3 py-2 border text-gray-500 text-[12px] border-gray-300 rounded-lg text-sm"
               >
                 <option value="7 days">Last 7 days</option>
                 <option value="30 days">Last 30 days</option>
@@ -189,10 +172,6 @@ export default function MasterDashboard() {
             </svg>
           </div>
 
-          <div className="mt-4 flex justify-between text-sm text-gray-600">
-            <span>Total Sales: Rp 98,231,890</span>
-            <span className="text-green-600">↗ +18.2% from last period</span>
-          </div>
         </div>
 
         {/* Recent User Reports */}

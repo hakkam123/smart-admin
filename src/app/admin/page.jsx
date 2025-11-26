@@ -5,17 +5,11 @@ import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
 import CustomerRelationship from '@/components/store/CustomerRelationship';
 import { 
-  FiTrendingUp, 
-  FiUsers, 
-  FiShoppingCart, 
-  FiDollarSign,
   FiFilter,
   FiCalendar,
   FiClock,
-  FiMessageCircle,
   FiExternalLink,
-  FiStar,
-  FiBell
+  FiStar
 } from 'react-icons/fi';
 
 export default function Dashboard() {
@@ -46,11 +40,11 @@ export default function Dashboard() {
   }, []);
 
   const bestProducts = [
-    { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8, change: '+15.2%' },
-    { name: 'Smart Watch', sales: 987, revenue: 'Rp 98,700,000', rating: 4.7, change: '+22.8%' },
-    { name: 'Laptop Stand', sales: 756, revenue: 'Rp 37,800,000', rating: 4.9, change: '+8.5%' },
-    { name: 'USB-C Hub', sales: 654, revenue: 'Rp 32,700,000', rating: 4.6, change: '+12.3%' },
-    { name: 'Phone Case', sales: 543, revenue: 'Rp 16,290,000', rating: 4.5, change: '+5.7%' }
+    { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8 },
+    { name: 'Smart Watch', sales: 987, revenue: 'Rp 98,700,000', rating: 4.7},
+    { name: 'Laptop Stand', sales: 756, revenue: 'Rp 37,800,000', rating: 4.9},
+    { name: 'USB-C Hub', sales: 654, revenue: 'Rp 32,700,000', rating: 4.6},
+    { name: 'Phone Case', sales: 543, revenue: 'Rp 16,290,000', rating: 4.5}
   ];
 
   const getStatusColor = (status) => {
@@ -164,11 +158,6 @@ export default function Dashboard() {
               ))}
             </svg>
           </div>
-
-          <div className="mt-4 flex justify-between text-sm text-gray-600">
-            <span>Revenue: Rp 45,231,890</span>
-            <span className="text-green-600">↗ +20.1% from last week</span>
-          </div>
         </div>
 
         {/* Best Product Sales */}
@@ -217,7 +206,7 @@ export default function Dashboard() {
               href="/admin/orders" 
               className="text-orange-600 hover:text-orange-700 text-sm flex items-center"
             >
-              View All <FiExternalLink className="ml-1" size={14} />
+              View All
             </Link>
           </div>
           <div className="space-y-3">

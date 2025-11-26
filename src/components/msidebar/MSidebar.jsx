@@ -55,7 +55,7 @@ const MasterSidebar = () => {
       title: 'BUSINESS OPERATIONS',
       items: [
         { name: 'Orders', icon: FiShoppingCart, href: '/master/orders' },
-        { name: 'Shops', icon: FiShoppingBag, href: '/master/shops' },
+        { name: 'Stores', icon: FiShoppingBag, href: '/master/stores' },
         { name: 'Users', icon: FiUsers, href: '/master/users', isNew: true },
       ]
     },
@@ -108,7 +108,15 @@ const MasterSidebar = () => {
               section.expandable && !expandedMenus[section.title] ? 'max-h-0 overflow-hidden' : 'max-h-96'
             }`}>
               {section.items.map((item, itemIndex) => {
-                const isActive = pathname === item.href;
+                // Smart active state logic
+                let isActive = false;
+                if (item.href === '/master') {
+                  // Overview is only active for exact /master path
+                  isActive = pathname === '/master';
+                } else {
+                  // Other menus support nested routes
+                  isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                }
                 
                 return (
                   <Link
