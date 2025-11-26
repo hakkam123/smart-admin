@@ -92,25 +92,7 @@ export default function EditProduct({ params }) {
     }
   }, [getToken]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  useEffect(() => {
-    loadProductData();
-  }, [id, loadProductData]);
-
-  // Cleanup image preview URLs to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      newImages.forEach(image => {
-        if (image && image.previewUrl) {
-          URL.revokeObjectURL(image.previewUrl);
-        }
-      });
-    };
-  }, [newImages]);
-
+  // Define loadProductData before using it in useEffect
   const loadProductData = React.useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -163,6 +145,26 @@ export default function EditProduct({ params }) {
       setLoading(false);
     }
   }, [getToken, id]);
+
+  // Add useEffect hooks after function definitions
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    loadProductData();
+  }, [loadProductData]);
+
+  // Cleanup image preview URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      newImages.forEach(image => {
+        if (image && image.previewUrl) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+      });
+    };
+  }, [newImages]);
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;

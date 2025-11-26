@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-// ensure axios sends cookies (Clerk session) for cross-origin calls
+import useAuth from '@clerk/nextjs';
 axios.defaults.withCredentials = true;
 import Link from 'next/link';
 import { 
@@ -37,7 +37,7 @@ export default function OrdersPage() {
   const [ordersData, setOrdersData] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [ordersError, setOrdersError] = useState(null);
-
+  const [getToken] = useAuth();
   // Use fetched orders only
   const sourceOrders = ordersData;
 
@@ -50,7 +50,7 @@ export default function OrdersPage() {
       try {
         const res = await axios.get(`${API_BASE}/api/store/orders`);
         const fetched = res?.data?.orders || [];
-        // Map to the UI-friendly shape used below
+        headers: { Authorization: `Bearer ${token}` }
         const mapped = fetched.map(o => ({
           id: o.id,
           invoice: o.invoice || (o.id ? `#${o.id}` : ''),
