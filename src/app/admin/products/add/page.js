@@ -95,7 +95,7 @@ export default function AddProductPage() {
     };
 
     fetchCategories();
-  }, []);
+  }, [getToken]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

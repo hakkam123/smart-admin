@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
-import { 
-  FiSearch, 
-  FiFilter, 
+import {
+  FiSearch,
+  FiFilter,
   FiGrid,
   FiList,
   FiPlus,
@@ -34,11 +35,7 @@ export default function ProductsPage() {
     { label: 'Di atas Rp 5Jt', value: '5000000-999999999' }
   ];
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
@@ -48,7 +45,7 @@ export default function ProductsPage() {
 
       if (response.data.products) {
         setProducts(response.data.products);
-        
+
         // Get unique categories from products
         const uniqueCategories = ['all', ...new Set(response.data.products.map(p =>
           typeof p.category === 'object' ? p.category.name : p.category
@@ -61,7 +58,11 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('id-ID', {
@@ -223,10 +224,13 @@ export default function ProductsPage() {
                   {/* Product Image */}
                   <div className="h-48 bg-gray-200 relative">
                     {product.images && product.images[0] ? (
-                      <img
+                      <Image
                         src={product.images[0]}
                         alt={product.name}
+                        fill
                         className="w-full h-full object-cover"
+                        style={{ objectFit: 'cover' }}
+                        unoptimized
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-gray-400">

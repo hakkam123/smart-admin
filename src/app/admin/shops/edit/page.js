@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
@@ -33,12 +33,7 @@ export default function EditShopPage({ params }) {
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
-  // Load shop data when component mounts
-  useEffect(() => {
-    loadShopData();
-  }, []);
-
-  const loadShopData = async () => {
+  const loadShopData = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -68,7 +63,12 @@ export default function EditShopPage({ params }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
+
+  // Load shop data when component mounts
+  useEffect(() => {
+    loadShopData();
+  }, [loadShopData]);
 
   const handleInputChange = (field, value) => {
     setShopData(prev => ({

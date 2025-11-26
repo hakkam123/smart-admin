@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
@@ -92,24 +93,9 @@ export default function EditProduct({ params }) {
     };
 
     fetchCategories();
-  }, []);
+  }, [getToken]);
 
-  useEffect(() => {
-    loadProductData();
-  }, [id]);
-
-  // Cleanup image preview URLs to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      newImages.forEach(image => {
-        if (image && image.previewUrl) {
-          URL.revokeObjectURL(image.previewUrl);
-        }
-      });
-    };
-  }, [newImages]);
-
-  const loadProductData = async () => {
+  const loadProductData = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
@@ -160,7 +146,22 @@ export default function EditProduct({ params }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, getToken]);
+
+  useEffect(() => {
+    loadProductData();
+  }, [loadProductData]);
+
+  // Cleanup image preview URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      newImages.forEach(image => {
+        if (image && image.previewUrl) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+      });
+    };
+  }, [newImages]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -708,9 +709,11 @@ export default function EditProduct({ params }) {
                               className={`relative ${imagesToDelete.includes(index) ? 'opacity-50' : ''}`}
                               onClick={() => !imagesToDelete.includes(index) && setMainImage(image)}
                             >
-                              <img
+                              <Image
                                 src={image}
                                 alt={`Product ${index + 1}`}
+                                width={128}
+                                height={128}
                                 className={`w-full h-32 object-cover rounded-lg border ${
                                   mainImage === image ? 'border-2 border-orange-500' : 'border-gray-200'
                                 } ${imagesToDelete.includes(index) ? 'grayscale' : ''}`}
@@ -747,9 +750,11 @@ export default function EditProduct({ params }) {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           {newImages.map((file, index) => (
                             <div key={`new-${index}`} className="relative">
-                              <img
+                              <Image
                                 src={file.previewUrl}
                                 alt={`New ${index + 1}`}
+                                width={128}
+                                height={128}
                                 className="w-full h-32 object-cover rounded-lg border border-gray-200"
                               />
                               <button

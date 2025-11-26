@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
-import { 
+import {
   FiMail,
   FiPhone,
   FiMapPin,
@@ -49,12 +49,7 @@ export default function ShopsPage() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch shop data when component mounts
-  useEffect(() => {
-    loadShopData();
-  }, []);
-
-  const loadShopData = async () => {
+  const loadShopData = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
@@ -64,7 +59,7 @@ export default function ShopsPage() {
 
       if (response.data.success) {
         const storeData = response.data.data;
-        
+
         // Set shop data
         setShopData({
           name: storeData.name,
@@ -103,7 +98,12 @@ export default function ShopsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
+
+  // Fetch shop data when component mounts
+  useEffect(() => {
+    loadShopData();
+  }, [loadShopData]);
 
   const getStatusColor = (status) => {
     switch (status) {

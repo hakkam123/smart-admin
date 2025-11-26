@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -30,12 +30,7 @@ export default function ProductDetailPage() {
   const [productData, setProductData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load product data from API
-  useEffect(() => {
-    loadProductData();
-  }, [params.id]);
-
-  const loadProductData = async () => {
+  const loadProductData = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
@@ -76,7 +71,12 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id, getToken]);
+
+  // Load product data from API
+  useEffect(() => {
+    loadProductData();
+  }, [loadProductData]);
 
   if (loading) {
     return (
