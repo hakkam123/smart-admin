@@ -31,11 +31,8 @@ export default function ProductDetailPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // API response structure has product data inside a "product" field
       if (response.data && response.data.product) {
         const product = response.data.product;
-
-        // Map API response to expected format
         setProductData({
           ...product,
           categoryLabel: product.category?.name || product.category,
@@ -46,7 +43,6 @@ export default function ProductDetailPage() {
           })) || [],
           variants: product.variants || [],
           reviews: product.reviews || [],
-          // Default statistics if not provided
           statistics: {
             totalSold: product.totalSold || 0,
             totalRevenue: product.totalRevenue || 0,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
@@ -20,15 +20,21 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 export default function EditProduct({ params }) {
-  const id = React.use(params).id; // Use React.use() to unwrap the params Promise
+  const id = React.use(params).id;
+  const { getToken } = useAuth();
+  const router = useRouter();
+  
+  // Initialize all state at the top
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     categoryId: '',
-    mrp: 0, // Changed from comparePrice to mrp to match store form
-    price: 0, // This was already present
+    mrp: '', // Change to string for proper form handling
+    price: '', // Change to string for proper form handling
     inStock: true, // Added inStock field
     stock: 0,
     minStock: 0,
@@ -59,41 +65,36 @@ export default function EditProduct({ params }) {
 
   // No additional states needed for tags and variants as we're not implementing them in the new UI
 
-  // Categories for dropdown - prepare for API fetch
-  const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
-  // Simulate loading product data
-  const { getToken } = useAuth();
-  const router = useRouter();
 
-  // Fetch categories from API
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = await getToken();
-        const response = await axios.get(`${baseUrl}/api/categories`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+  // Fetch categories from API with useCallback
+  const fetchCategories = useCallback(async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = await getToken();
+      const response = await axios.get(`${baseUrl}/api/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-        if (response.data.success) {
-          // Format the API response to match the expected format for the dropdown using IDs
-          const formattedCategories = response.data.data.map(cat => ({
-            value: cat.id,
-            label: cat.name
-          }));
-          setCategories(formattedCategories);
-        }
-      } catch (error) {
-        toast.error(error?.response?.data?.message || error.message || 'Failed to fetch categories');
-      } finally {
-        setCategoriesLoading(false);
+      if (response.data.success) {
+        // Format the API response to match the expected format for the dropdown using IDs
+        const formattedCategories = response.data.data.map(cat => ({
+          value: cat.id,
+          label: cat.name
+        }));
+        setCategories(formattedCategories);
       }
-    };
-
-    fetchCategories();
+    } catch (error) {
+      console.error('Categories fetch error:', error);
+      toast.error(error?.response?.data?.message || 'Failed to fetch categories');
+    } finally {
+      setCategoriesLoading(false);
+    }
   }, [getToken]);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
     loadProductData();
@@ -125,8 +126,8 @@ export default function EditProduct({ params }) {
           name: product.name || '',
           description: product.description || '',
           categoryId: product.categoryId || product.category?.id || '', // Use categoryId if available, otherwise get the ID from category object
-          mrp: product.mrp || 0, // Use mrp field as specified in API documentation
-          price: product.price || 0, // Use price field as specified in API documentation
+          mrp: product.mrp ? String(product.mrp) : '', // Convert to string for form handling
+          price: product.price ? String(product.price) : '', // Convert to string for form handling
           inStock: product.inStock !== undefined ? product.inStock : true, // Handle inStock field as specified in API documentation
           stock: product.stock || 0,
           minStock: product.minStock || 0,
@@ -163,7 +164,7 @@ export default function EditProduct({ params }) {
     }
   }, [getToken, id]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
 
     if (name.includes('.')) {
@@ -181,10 +182,10 @@ export default function EditProduct({ params }) {
         [name]: type === 'checkbox' ? checked : value
       }));
     }
-  };
+  }, []);
 
   // Image management functions
-  const handleImageUpload = (files) => {
+  const handleImageUpload = useCallback((files) => {
     // Filter to only accept image files
     const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
 
@@ -207,25 +208,25 @@ export default function EditProduct({ params }) {
         return updated;
       });
     }
-  };
+  }, [existingImages, newImages, mainImage]);
 
-  const handleDrop = (e) => {
+  const handleDrop = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(false);
     const files = e.dataTransfer.files;
     handleImageUpload(files);
-  };
+  }, [handleImageUpload]);
 
-  const handleDragOver = (e) => {
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDragOver(true);
-  };
+  }, []);
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setIsDragOver(false);
-  };
+  }, []);
 
-  const handleDeleteExistingImage = (index) => {
+  const handleDeleteExistingImage = useCallback((index) => {
     setImagesToDelete(prev => [...prev, index]);
     // If we're deleting the main image, update main image reference
     if (existingImages[index] === mainImage) {
@@ -239,9 +240,9 @@ export default function EditProduct({ params }) {
         setMainImage(null);
       }
     }
-  };
+  }, [existingImages, mainImage, newImages]);
 
-  const handleRemoveNewImage = (index) => {
+  const handleRemoveNewImage = useCallback((index) => {
     setNewImages(prev => {
       // Clean up the preview URL for the image being removed
       const imageToRemove = prev[index];
@@ -263,11 +264,27 @@ export default function EditProduct({ params }) {
 
       return updated;
     });
-  };
+  }, [mainImage, existingImages]);
 
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+
+    // Form validation
+    if (!formData.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+
+    if (!formData.categoryId) {
+      toast.error('Please select a category');
+      return;
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Please enter a valid price');
+      return;
+    }
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -278,8 +295,8 @@ export default function EditProduct({ params }) {
         name: formData.name,
         description: formData.description,
         category: formData.categoryId, // Use categoryId to match API expectation
-        mrp: formData.mrp,
-        price: formData.price,
+        mrp: parseFloat(formData.mrp) || 0,
+        price: parseFloat(formData.price) || 0,
         inStock: formData.inStock,
         stock: formData.stock,
         minStock: formData.minStock,
@@ -343,7 +360,24 @@ export default function EditProduct({ params }) {
       toast.error(errorMessage);
       console.error('Error updating product:', errorMessage);
     }
-  };
+  }, [formData, newImages, imagesToDelete, getToken, id, router]);
+
+  // Helper function to set main image
+  const setAsMainImage = useCallback((image) => {
+    setMainImage(image);
+  }, []);
+
+  // Add memory cleanup for component unmount
+  useEffect(() => {
+    return () => {
+      // Clean up all preview URLs on unmount
+      newImages.forEach(image => {
+        if (image && image.previewUrl) {
+          URL.revokeObjectURL(image.previewUrl);
+        }
+      });
+    };
+  }, [newImages]);
 
   if (loading) {
     return (
