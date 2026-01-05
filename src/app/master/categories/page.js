@@ -8,7 +8,6 @@ import {
   FiPlus, 
   FiSearch, 
   FiEdit3,
-  FiTrash2,
   FiTag,
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -18,16 +17,13 @@ export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
   const { getToken } = useAuth();
   
-  // Categories state
   const [categories, setCategories] = useState([]);
 
-  // Fetch categories from API
   const fetchCategories = React.useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -60,30 +56,6 @@ export default function CategoriesPage() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
-
-  const handleDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      setDeleting(id);
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = await getToken();
-        const response = await axios.delete(`${baseUrl}/api/categories/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.data.success) {
-          toast.success('Category deleted successfully');
-          setCategories(prev => prev.filter(cat => cat.id !== id));
-        } else {
-          toast.error(response.data.message || 'Failed to delete category');
-        }
-      } catch (error) {
-        toast.error(error?.response?.data?.message || error.message || 'Error deleting category');
-      } finally {
-        setDeleting(null);
-      }
-    }
-  };
 
   const filteredCategories = categories.filter(category => {
     const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -184,7 +156,7 @@ export default function CategoriesPage() {
       {/* Filters */}
       <div className="bg-white rounded-lg border p-3">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+          <div className="w-full sm:w-[70%]">
             <div className="relative">
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
@@ -197,17 +169,17 @@ export default function CategoriesPage() {
             </div>
           </div>
           
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 border text-[12px] border-gray-300 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-
-
+          <div className="w-full sm:w-[30%]">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full px-4 py-2 border text-[12px] border-gray-300 text-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -228,9 +200,6 @@ export default function CategoriesPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Created Date
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -246,7 +215,7 @@ export default function CategoriesPage() {
                 </tr>
               ) : (
                 paginatedCategories.map((category) => (
-                <tr key={category.id} className="hover:bg-gray-50">
+                <tr key={category.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/master/categories/edit/${category.id}`}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="shrink-0 h-10 w-10">
@@ -267,7 +236,6 @@ export default function CategoriesPage() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{category.name}</div>
-                        <div className="text-sm text-gray-500">Slug: {category.slug}</div>
                       </div>
                     </div>
                   </td>
@@ -283,29 +251,6 @@ export default function CategoriesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {new Date(category.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-3">
-                      <Link
-                        href={`/master/categories/edit/${category.id}`}
-                        className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
-                        title="Edit Category"
-                      >
-                        <FiEdit3 className="h-4 w-4" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className={`p-1 rounded hover:bg-red-50 ${deleting === category.id ? 'text-gray-400' : 'text-red-600 hover:text-red-900'}`}
-                        title="Delete Category"
-                        disabled={deleting === category.id}
-                      >
-                        {deleting === category.id ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"></div>
-                        ) : (
-                          <FiTrash2 className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
                   </td>
                 </tr>
                 ))

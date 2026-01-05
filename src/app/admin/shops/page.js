@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
@@ -50,10 +50,6 @@ export default function ShopsPage() {
   const [loading, setLoading] = useState(true);
 
   // Fetch shop data when component mounts
-  useEffect(() => {
-    loadShopData();
-  }, [loadShopData]);
-
   const loadShopData = React.useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -104,6 +100,10 @@ export default function ShopsPage() {
       setLoading(false);
     }
   }, [getToken]);
+
+  useEffect(() => {
+    loadShopData();
+  }, [loadShopData]);
 
   const getStatusColor = (status) => {
     switch (status) {

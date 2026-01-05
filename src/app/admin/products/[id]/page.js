@@ -19,7 +19,6 @@ export default function ProductDetailPage() {
   const { getToken } = useAuth();
   const params = useParams();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('general');
   const [productData, setProductData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -150,7 +149,6 @@ export default function ProductDetailPage() {
             onClick={deleteProduct}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
           >
-            <FiTrash2 className="w-4 h-4" />
             Delete Product
           </button>
         </div>
@@ -160,38 +158,13 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Tabs */}
+            {/* Product Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8 px-6">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('general')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'general'
-                        ? 'border-orange-500 text-orange-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    General
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('advanced')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'advanced'
-                        ? 'border-orange-500 text-orange-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Advanced
-                  </button>
-                </nav>
+              <div className="border-b border-gray-200 px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900">Product Information</h3>
               </div>
 
               <div className="p-6">
-                {/* General Tab Content */}
-                {activeTab === 'general' && (
                   <div className="space-y-6">
                     {/* Product Name */}
                     <div>
@@ -256,125 +229,10 @@ export default function ProductDetailPage() {
                         <p className="text-gray-900">{productData.dimensions}</p>
                       </div>
                     </div>
-
-                    {/* Additional Information */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Additional Information
-                      </label>
-                      <p className="text-gray-700 leading-relaxed">{productData.additionalInfo}</p>
-                    </div>
                   </div>
-                )}
-
-                {/* Advanced Tab Content */}
-                {activeTab === 'advanced' && (
-                  <div className="space-y-8">
-                    {/* Product Specifications */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Specifications</h3>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                          <p className="text-gray-900">{productData.sku}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
-                          <p className="text-gray-900">{productData.barcode}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Stock</label>
-                          <p className="text-gray-900">{productData.minStock} units</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
-                          <p className="text-gray-900">{productData.warranty}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Shipping Information */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Information</h3>
-                      <div className="grid grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Weight</label>
-                          <p className="text-gray-900">{productData.shippingWeight}</p>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Dimensions</label>
-                          <p className="text-gray-900">{productData.shippingLength} x {productData.shippingWidth} x {productData.shippingHeight}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Product Variants */}
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Product Variants</h3>
-                        <FiInfo className="w-4 h-4 text-gray-400" />
-                      </div>
-
-                      <div className="space-y-3">
-                        {productData.variants.map((variant) => (
-                          <div key={variant.id} className="grid grid-cols-2 gap-4 p-3 bg-gray-50 rounded-lg">
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Variant</label>
-                              <p className="text-gray-900">{variant.variant}</p>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-500 mb-1">Stock</label>
-                              <p className="text-gray-900">{variant.stock} units</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Reviews Section */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Reviews</h3>
-                      {productData.reviews.length > 0 ? (
-                        <div className="space-y-4">
-                          {productData.reviews.map((review) => (
-                            <div key={review.id} className="border border-gray-200 rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium text-gray-900">{review.customer}</h4>
-                                <div className="flex items-center gap-2">
-                                  <div className="flex items-center">
-                                    {[...Array(5)].map((_, i) => (
-                                      <FiStar
-                                        key={i}
-                                        className={`w-4 h-4 ${
-                                          i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                                        }`}
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-sm text-gray-500">{review.date}</span>
-                                </div>
-                              </div>
-                              <p className="text-gray-700">{review.comment}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="bg-gray-50 rounded-lg p-8 text-center">
-                          <div className="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                            <FiStar className="w-8 h-8 text-gray-400" />
-                          </div>
-                          <h4 className="text-lg font-medium text-gray-900 mb-2">No reviews yet</h4>
-                          <p className="text-sm text-gray-600">
-                            This product hasn&apos;t received any customer reviews yet.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
-          </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
@@ -476,36 +334,6 @@ export default function ProductDetailPage() {
                       ? 'Low Stock'
                       : 'Out of Stock'}
                   </span>
-                </div>
-              </div>
-            </div>
-
-            {/* SEO Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">SEO Information</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
-                  <p className="text-sm text-gray-900">{productData.metaTitle}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                  <p className="text-sm text-gray-700">{productData.metaDescription}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                  <div className="flex flex-wrap gap-1">
-                    {productData.tags && productData.tags !== '' ?
-                      productData.tags.split(', ').map((tag, index) => (
-                        <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {tag}
-                        </span>
-                      )) :
-                      <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded">
-                        No tags
-                      </span>
-                    }
-                  </div>
                 </div>
               </div>
             </div>

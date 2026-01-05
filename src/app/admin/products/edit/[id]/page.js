@@ -25,7 +25,6 @@ export default function EditProduct({ params }) {
   const router = useRouter();
   
   // Initialize all state at the top
-  const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -33,41 +32,23 @@ export default function EditProduct({ params }) {
     name: '',
     description: '',
     categoryId: '',
-    mrp: '', // Change to string for proper form handling
-    price: '', // Change to string for proper form handling
-    inStock: true, // Added inStock field
+    mrp: '',
+    price: '',
     stock: 0,
     minStock: 0,
     weight: '',
     dimensions: '',
     model: '',
-    additionalInfo: '',
     status: 'draft',
-    sku: '',
-    barcode: '',
-    shippingWeight: '',
-    shippingLength: '',
-    shippingWidth: '',
-    shippingHeight: '',
-    warranty: '',
-    returnPolicy: '',
-    tags: '',
-    metaTitle: '',
-    metaDescription: '',
   });
 
   // State for image management
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
-  const [imagesToDelete, setImagesToDelete] = useState([]); // Array of image indices to delete
-  const [mainImage, setMainImage] = useState(null); // Track main image for product
-  const [isDragOver, setIsDragOver] = useState(false); // Track drag over state
+  const [imagesToDelete, setImagesToDelete] = useState([]); 
+  const [mainImage, setMainImage] = useState(null); 
+  const [isDragOver, setIsDragOver] = useState(false); 
 
-  // No additional states needed for tags and variants as we're not implementing them in the new UI
-
-
-
-  // Fetch categories from API with useCallback
   const fetchCategories = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -77,7 +58,6 @@ export default function EditProduct({ params }) {
       });
 
       if (response.data.success) {
-        // Format the API response to match the expected format for the dropdown using IDs
         const formattedCategories = response.data.data.map(cat => ({
           value: cat.id,
           label: cat.name
@@ -107,33 +87,20 @@ export default function EditProduct({ params }) {
         setFormData({
           name: product.name || '',
           description: product.description || '',
-          categoryId: product.categoryId || product.category?.id || '', // Use categoryId if available, otherwise get the ID from category object
-          mrp: product.mrp ? String(product.mrp) : '', // Convert to string for form handling
-          price: product.price ? String(product.price) : '', // Convert to string for form handling
-          inStock: product.inStock !== undefined ? product.inStock : true, // Handle inStock field as specified in API documentation
+          categoryId: product.categoryId || product.category?.id || '',
+          mrp: product.mrp ? String(product.mrp) : '',
+          price: product.price ? String(product.price) : '',
           stock: product.stock || 0,
           minStock: product.minStock || 0,
           weight: product.weight || '',
           dimensions: product.dimensions || '',
           model: product.model || '',
-          additionalInfo: product.additionalInfo || '',
           status: product.status || 'draft',
-          sku: product.sku || '',
-          barcode: product.barcode || '',
-          shippingWeight: product.shippingWeight || '',
-          shippingLength: product.shippingLength || '',
-          shippingWidth: product.shippingWidth || '',
-          shippingHeight: product.shippingHeight || '',
-          warranty: product.warranty || '',
-          returnPolicy: product.returnPolicy || '',
-          tags: product.tags || '',
-          metaTitle: product.metaTitle || '',
-          metaDescription: product.metaDescription || '',
         });
 
         // Set existing images
         setExistingImages(product.images || []);
-        setImagesToDelete([]); // Reset images to delete when loading
+        setImagesToDelete([]); 
       } else {
         console.error('Product data not found in response:', response.data);
         toast.error('Product not found');
@@ -320,7 +287,6 @@ export default function EditProduct({ params }) {
         metaDescription: formData.metaDescription,
       };
 
-      // Convert payload to FormData since the API expects form data
       const productFormData = new FormData();
       Object.keys(payload).forEach(key => {
         if (payload[key] !== null && payload[key] !== undefined) {
@@ -328,12 +294,10 @@ export default function EditProduct({ params }) {
         }
       });
 
-      // Add new images to form data - use the File object directly since we used Object.assign
       newImages.forEach((imageFile) => {
         productFormData.append('images', imageFile);
       });
 
-      // Add images to delete if any
       if (imagesToDelete.length > 0) {
         productFormData.append('imagesToDelete', JSON.stringify(imagesToDelete));
       }
@@ -428,41 +392,12 @@ export default function EditProduct({ params }) {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setActiveTab('general')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'general'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            General Information
-          </button>
-          <button
-            onClick={() => setActiveTab('advanced')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'advanced'
-                ? 'border-orange-500 text-orange-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            Advanced Settings
-          </button>
-        </nav>
-      </div>
-
       <form onSubmit={handleSubmit}>
-        {/* General Information Tab */}
-        {activeTab === 'general' && (
-          <div className="space-y-6">
-            {/* Product Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Information</h3>
+        {/* Product Information */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Product Information</h3>
 
-              <div className="space-y-6">
+          <div className="space-y-6">
                 {/* Product Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -560,53 +495,8 @@ export default function EditProduct({ params }) {
                   </div>
                 </div>
 
-                {/* SKU and Barcode */}
+                {/* Stock Quantity and Min Stock */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      SKU
-                    </label>
-                    <input
-                      type="text"
-                      name="sku"
-                      value={formData.sku}
-                      onChange={handleInputChange}
-                      placeholder="Enter product SKU"
-                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Barcode
-                    </label>
-                    <input
-                      type="text"
-                      name="barcode"
-                      value={formData.barcode}
-                      onChange={handleInputChange}
-                      placeholder="Enter product barcode (if any)"
-                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                </div>
-
-                {/* In Stock and Stock Quantity */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      In Stock
-                    </label>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="inStock"
-                        checked={formData.inStock}
-                        onChange={(e) => setFormData(prev => ({ ...prev, inStock: e.target.checked }))}
-                        className="w-5 h-5"
-                      />
-                      <span className="ml-2">Product is in stock</span>
-                    </div>
-                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Stock Quantity
@@ -620,10 +510,6 @@ export default function EditProduct({ params }) {
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
-                </div>
-
-                {/* Min Stock and Weight */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Minimum Stock Level
@@ -637,6 +523,10 @@ export default function EditProduct({ params }) {
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
+                </div>
+
+                {/* Weight and Dimensions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Weight (kg)
@@ -650,21 +540,19 @@ export default function EditProduct({ params }) {
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
-                </div>
-
-                {/* Dimensions */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dimensions (L x W x H)
-                  </label>
-                  <input
-                    type="text"
-                    name="dimensions"
-                    value={formData.dimensions}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 10 x 5 x 3 cm"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Dimensions (L x W x H)
+                    </label>
+                    <input
+                      type="text"
+                      name="dimensions"
+                      value={formData.dimensions}
+                      onChange={handleInputChange}
+                      placeholder="e.g. 10 x 5 x 3 cm"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
                 </div>
 
                 {/* Model */}
@@ -681,64 +569,51 @@ export default function EditProduct({ params }) {
                     className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
+              </div>
+            </div>
 
-                {/* Additional Information */}
+            {/* Image Management */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Images</h3>
+
+              <div className="space-y-6">
+              {/* Drag and Drop Upload Area */}
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragOver ? 'border-orange-400 bg-orange-50' : 'border-gray-300 hover:border-orange-400'
+                }`}
+                onClick={() => document.getElementById('file-upload').click()}
+                onDrop={(e) => handleDrop(e)}
+                onDragOver={(e) => handleDragOver(e)}
+                onDragLeave={() => handleDragLeave()}
+              >
+                <FiImage className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-1">Drag and drop images here</p>
+                <p className="text-sm text-gray-500">
+                  or click to browse (max {4 - (existingImages?.length || 0)} more)
+                </p>
+                <p className="text-xs text-gray-400 mt-2">
+                  Only *.png, *.jpg and *.jpeg image files are accepted
+                </p>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                id="file-upload"
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e.target.files)}
+                className="hidden"
+              />
+
+              {/* Current Images */}
+              {existingImages && existingImages.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Additional Information
+                    Current Images
                   </label>
-                  <textarea
-                    name="additionalInfo"
-                    value={formData.additionalInfo}
-                    onChange={handleInputChange}
-                    placeholder="Additional product information"
-                    rows={4}
-                    className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                  />
-                </div>
-
-                {/* Image Management */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Images</h3>
-
-                  <div className="space-y-6">
-                    {/* Drag and Drop Upload Area */}
-                    <div
-                      className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                        isDragOver ? 'border-orange-400 bg-orange-50' : 'border-gray-300 hover:border-orange-400'
-                      }`}
-                      onClick={() => document.getElementById('file-upload').click()}
-                      onDrop={(e) => handleDrop(e)}
-                      onDragOver={(e) => handleDragOver(e)}
-                      onDragLeave={() => handleDragLeave()}
-                    >
-                      <FiImage className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-1">Drag and drop images here</p>
-                      <p className="text-sm text-gray-500">
-                        or click to browse (max {4 - (existingImages?.length || 0)} more)
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Only *.png, *.jpg and *.jpeg image files are accepted
-                      </p>
-                    </div>
-
-                    {/* Hidden file input */}
-                    <input
-                      id="file-upload"
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e.target.files)}
-                      className="hidden"
-                    />
-
-                    {/* Current Images */}
-                    {existingImages && existingImages.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Current Images
-                        </label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                           {existingImages.map((image, index) => (
                             <div
                               key={index}
@@ -778,194 +653,53 @@ export default function EditProduct({ params }) {
                       </div>
                     )}
 
-                    {/* New Images Preview */}
-                    {newImages.length > 0 && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          New Images
-                        </label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          {newImages.map((file, index) => (
-                            <div key={`new-${index}`} className="relative">
-                              <Image
-                                src={file.previewUrl}
-                                alt={`New ${index + 1}`}
-                                width={120}
-                                height={128}
-                                className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                                unoptimized
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveNewImage(index)}
-                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                              >
-                                <FiX className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
+              {/* New Images Preview */}
+              {newImages.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    New Images
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {newImages.map((file, index) => (
+                      <div key={`new-${index}`} className="relative">
+                        <Image
+                          src={file.previewUrl}
+                          alt={`New ${index + 1}`}
+                          width={120}
+                          height={128}
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                          unoptimized
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveNewImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <FiX className="w-3 h-3" />
+                        </button>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
-        )}
 
-        {/* Advanced Settings Tab */}
-        {activeTab === 'advanced' && (
-          <div className="space-y-6">
-            {/* Shipping Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FiTruck className="w-5 h-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">Shipping Information</h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Weight (kg)
-                  </label>
-                  <input
-                    type="text"
-                    name="shippingWeight"
-                    value={formData.shippingWeight}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 2.0 kg"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Length (cm)
-                  </label>
-                  <input
-                    type="text"
-                    name="shippingLength"
-                    value={formData.shippingLength}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 30 cm"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Width (cm)
-                  </label>
-                  <input
-                    type="text"
-                    name="shippingWidth"
-                    value={formData.shippingWidth}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 20 cm"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Height (cm)
-                  </label>
-                  <input
-                    type="text"
-                    name="shippingHeight"
-                    value={formData.shippingHeight}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 15 cm"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              {/* Warranty and Return Policy */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Warranty
-                  </label>
-                  <input
-                    type="text"
-                    name="warranty"
-                    value={formData.warranty}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 1 Year"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Return Policy
-                  </label>
-                  <input
-                    type="text"
-                    name="returnPolicy"
-                    value={formData.returnPolicy}
-                    onChange={handleInputChange}
-                    placeholder="e.g. 30 Days"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags
-                </label>
-                <input
-                  type="text"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleInputChange}
-                  placeholder="Enter tags separated by commas (e.g., electronics, gadget, new)"
-                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-
-            {/* SEO Information */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FiPackage className="w-5 h-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">SEO Information</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meta Title
-                  </label>
-                  <input
-                    type="text"
-                    name="metaTitle"
-                    value={formData.metaTitle}
-                    onChange={handleInputChange}
-                    placeholder="Enter meta title for SEO"
-                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Meta Description
-                  </label>
-                  <textarea
-                    name="metaDescription"
-                    value={formData.metaDescription}
-                    onChange={handleInputChange}
-                    placeholder="Enter meta description for SEO"
-                    rows={3}
-                    className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                  />
-                </div>
-              </div>
-            </div>
+          {/* Submit Button */}
+          <div className="flex justify-end gap-3 mt-5">
+            <Link
+              href={`/admin/products/${id}`}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center gap-2"
+            >
+              Update Product
+            </button>
           </div>
-        )}
       </form>
     </div>
   );

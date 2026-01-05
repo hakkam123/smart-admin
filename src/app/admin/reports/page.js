@@ -24,6 +24,7 @@ export default function ReportsPage() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('7 hari');
 
   const { getToken } = useAuth();
   const [reports, setReports] = useState([]);
@@ -219,9 +220,20 @@ export default function ReportsPage() {
           <p className="text-gray-600">Manage and track customer product complaints</p>
         </div>
         <div className="flex space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700">
-            Date Range
-          </button>
+          <div className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
+            <FiCalendar className="mr-2" />
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="bg-transparent outline-none cursor-pointer"
+            >
+              <option value="7 hari">7 hari</option>
+              <option value="1 bulan">1 bulan</option>
+              <option value="3 bulan">3 bulan</option>
+              <option value="6 bulan">6 bulan</option>
+              <option value="1 tahun">1 tahun</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -15,7 +15,7 @@ import {
 import CardAdmin from '@/components/master/CardAdmin';
 
 export default function MasterDashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState('7 days');
+  const [selectedPeriod, setSelectedPeriod] = useState('7 hari');
   const [liveOrders, setLiveOrders] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
   const [recentReports, setRecentReports] = useState([]);
@@ -94,88 +94,27 @@ export default function MasterDashboard() {
           <p className="text-gray-600">Master control panel overview and analytics</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="inline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors">
+          <div className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
             <FiCalendar className="mr-2" />
-            {selectedPeriod}
-          </button>
-          <button className="finline-flex items-center px-4 py-2 text-[12px] bg-slate-600 text-sm text-white rounded-lg hover:bg-slate-700 transition-colors">
-            Export
-          </button>
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="bg-transparent outline-none cursor-pointer"
+            >
+              <option value="7 hari">7 hari</option>
+              <option value="1 bulan">1 bulan</option>
+              <option value="3 bulan">3 bulan</option>
+              <option value="6 bulan">6 bulan</option>
+              <option value="1 tahun">1 tahun</option>
+            </select>
+          </div>
         </div>
       </div>
 
-    <CardAdmin />
+      <CardAdmin />
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Product Sales</h3>
-              <p className="text-gray-600">Sales performance over time</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <select 
-                value={selectedPeriod} 
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-3 py-2 border text-gray-500 text-[12px] border-gray-300 rounded-lg text-sm"
-              >
-                <option value="7 days">Last 7 days</option>
-                <option value="30 days">Last 30 days</option>
-                <option value="90 days">Last 90 days</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="h-64 bg-yellow-50 rounded-lg p-4">
-            <svg className="w-full h-full" viewBox="0 0 400 200">
-              {/* Chart Grid */}
-              <defs>
-                <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#fef3c7" strokeWidth="1"/>
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-              
-              {/* Chart Line */}
-              <polyline
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="3"
-                points={chartData.map((point, index) => `${index * 57 + 28.5},${200 - (point.value * 1.5)}`).join(' ')}
-              />
-              
-              {/* Chart Points */}
-              {chartData.map((point, index) => (
-                <circle
-                  key={index}
-                  cx={index * 57 + 28.5}
-                  cy={200 - (point.value * 1.5)}
-                  r="4"
-                  fill="#f59e0b"
-                  className="hover:r-6 transition-all"
-                />
-              ))}
-              
-              {/* X-axis labels */}
-              {chartData.map((point, index) => (
-                <text
-                  key={index}
-                  x={index * 57 + 28.5}
-                  y="190"
-                  textAnchor="middle"
-                  className="text-xs fill-gray-600"
-                >
-                  {point.day}
-                </text>
-              ))}
-            </svg>
-          </div>
-
-        </div>
-
-        {/* Recent User Reports */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* Recent User Reports - Full Width */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Recent User Reports</h3>
             <Link href="/master/reports" className="text-slate-600 hover:text-slate-700 text-sm">
@@ -204,9 +143,8 @@ export default function MasterDashboard() {
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Best Product Sale - Grid layout seperti gambar */}
+      {/* Best Product Sale - List layout */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Best Product Sale</h3>
@@ -215,24 +153,30 @@ export default function MasterDashboard() {
           </Link>
         </div>
         
-        {/* Grid layout dengan background pink */}
-        <div className="bg-pink-50 p-6 rounded-lg">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {bestProducts.slice(0, 8).map((product, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border border-pink-100 hover:shadow-md transition-shadow">
-                <div className="aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
-                  <FiPackage className="text-gray-400" size={24} />
+        {/* List layout */}
+        <div className="space-y-3">
+          {bestProducts.map((product, index) => (
+            <div key={index} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="flex items-center flex-1">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mr-4">
+                  <FiPackage className="text-gray-400" size={20} />
                 </div>
-                <h4 className="font-medium text-gray-900 text-sm mb-1 truncate">{product.name}</h4>
-                <div className="flex items-center mb-2">
-                  <FiStar className="text-yellow-400 mr-1" size={12} />
-                  <span className="text-xs text-gray-600">{product.rating}</span>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 text-sm">{product.name}</h4>
+                  <div className="flex items-center mt-1">
+                    <FiStar className="text-yellow-400 mr-1" size={14} />
+                    <span className="text-xs text-gray-600">{product.rating}</span>
+                    <span className="text-xs text-gray-400 mx-2">•</span>
+                    <span className="text-xs text-gray-600">{product.sales} sold</span>
+                  </div>
                 </div>
-                <p className="text-sm font-bold text-gray-900">{product.revenue}</p>
-                <p className="text-xs text-gray-500">{product.sales} sold</p>
               </div>
-            ))}
-          </div>
+              <div className="text-right">
+                <p className="text-sm font-bold text-gray-900">{product.revenue}</p>
+                <span className="text-green-600 text-xs font-medium">{product.change}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

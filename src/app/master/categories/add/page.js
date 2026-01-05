@@ -152,11 +152,9 @@ export default function AddCategoryPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow p-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Basic Information */}
+        <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center gap-2 mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
             </div>
@@ -194,29 +192,11 @@ export default function AddCategoryPage() {
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  URL Slug
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="slug"
-                    value={formData.slug}
-                    onChange={handleInputChange}
-                    className="w-full pl-5 pr-3 py-3 border text-gray-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent bg-gray-50"
-                    placeholder="category-slug"
-                    readOnly
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Auto-generated from category name</p>
-              </div>
             </div>
           </div>
 
-          {/* Category Image */}
-          <div className="bg-white rounded-lg shadow p-6">
+        {/* Category Image */}
+        <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center gap-2 mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Category Image</h2>
             </div>
@@ -270,70 +250,6 @@ export default function AddCategoryPage() {
               )}
             </div>
           </div>
-
-
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Category Status */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Category Status</h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Publication Status
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="active"
-                      checked={formData.status === 'active'}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Active</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="inactive"
-                      checked={formData.status === 'inactive'}
-                      onChange={handleInputChange}
-                      className="h-4 w-4 text-slate-600 focus:ring-slate-500 border-gray-300"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Inactive</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
-
-            <div className="space-y-3">
-              <button
-                type="button"
-                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors border border-gray-200"
-              >
-                Save as Draft
-              </button>
-              <button
-                type="button"
-                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200"
-              >
-                Reset Form
-              </button>
-            </div>
-          </div>
-        </div>
       </form>
     </div>
   );

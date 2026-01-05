@@ -31,7 +31,7 @@ export default function CardAdmin() {
           color: 'bg-blue-500',
         },
         {
-          title: 'Total Products',
+          title: 'All Products',
           value: dashboardData.products,
           icon: FiPackage,
           color: 'bg-green-500',
@@ -58,6 +58,13 @@ export default function CardAdmin() {
                 headers: { Authorization: `Bearer ${token}` }
             })
             console.log(data)
+            // Update dengan data dari API - Total Products mengambil semua produk
+            setDashboardData({
+                products: data?.totalProducts || 0,
+                orders: data?.totalOrders || 0,
+                stores: data?.totalStores || 0,
+                users: data?.totalUsers || 0,
+            })
         } catch (error) {
             toast.error(error?.response?.data?.error || error.message)
         }

@@ -52,16 +52,28 @@ export default function ReportsManagementPage() {
 
         const res = await axios.get(`${API_BASE}/api/admin/reports`, { headers });
         if (res.data && res.data.reports) {
-          const normalized = res.data.reports.map(r => ({
-            ...r,
-            reportType: r.reportType ? String(r.reportType).toLowerCase() : r.reportType,
-            priority: r.priority ? String(r.priority).toLowerCase() : r.priority,
-            suggestedPriority: r.suggestedPriority ? String(r.suggestedPriority).toLowerCase() : r.suggestedPriority,
-            status: r.status ? String(r.status).toLowerCase() : r.status,
-            reporterName: r.reporter?.name || r.user?.name || r.reporterName || '',
-            reporterEmail: r.reporter?.email || r.user?.email || r.reporterEmail || '',
-            targetName: r.store?.name || r.product?.name || r.targetId?.name,
-          }));
+          const normalized = res.data.reports.map(r => {
+            // Auto-update status jika "new" sudah lebih dari 7 hari
+            let finalStatus = r.status ? String(r.status).toLowerCase() : r.status;
+            if (finalStatus === 'new' && r.submittedAt) {
+              const submittedDate = new Date(r.submittedAt);
+              const daysDiff = Math.floor((new Date() - submittedDate) / (1000 * 60 * 60 * 24));
+              if (daysDiff > 7) {
+                finalStatus = 'unattended';
+              }
+            }
+
+            return {
+              ...r,
+              reportType: r.reportType ? String(r.reportType).toLowerCase() : r.reportType,
+              priority: r.priority ? String(r.priority).toLowerCase() : r.priority,
+              suggestedPriority: r.suggestedPriority ? String(r.suggestedPriority).toLowerCase() : r.suggestedPriority,
+              status: finalStatus,
+              reporterName: r.reporter?.name || r.user?.name || r.reporterName || '',
+              reporterEmail: r.reporter?.email || r.user?.email || r.reporterEmail || '',
+              targetName: r.store?.name || r.product?.name || r.targetId?.name,
+            };
+          });
           console.log('Normalized reports:', normalized);
           setReports(normalized);
           setFilteredReports(normalized);
@@ -228,9 +240,9 @@ export default function ReportsManagementPage() {
       {/* Filters and Search */}
       <div className="bg-white rounded-lg shadow mb-6">
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
-            <div className="relative">
+            <div className="relative w-full sm:w-[70%]">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiSearch className="h-5 w-5 text-gray-400" />
               </div>
@@ -244,7 +256,7 @@ export default function ReportsManagementPage() {
             </div>
 
             {/* Type Filter */}
-            <div className="relative">
+            <div className="relative w-full sm:w-[30%]">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiFilter className="h-5 w-5 text-gray-400" />
               </div>

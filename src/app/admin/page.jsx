@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
-import CustomerRelationship from '@/components/store/CustomerRelationship';
 import { 
   FiFilter,
   FiCalendar,
@@ -13,7 +12,7 @@ import {
 } from 'react-icons/fi';
 
 export default function Dashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState('7 days');
+  const [selectedPeriod, setSelectedPeriod] = useState('7 hari');
   const [liveOrders, setLiveOrders] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
 
@@ -77,14 +76,20 @@ export default function Dashboard() {
           {/* <p className="text-gray-600">Welcome back! Here&apos;s what&apos;s happening with your store today.</p> */}
         </div>
         <div className="flex items-center space-x-3">
-          <button className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
+          <div className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
             <FiCalendar className="mr-2" />
-            {selectedPeriod}
-          </button>
-          <button className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-            <FiFilter className="mr-2" />
-            Export
-          </button>
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="bg-transparent outline-none cursor-pointer"
+            >
+              <option value="7 hari">7 hari</option>
+              <option value="1 bulan">1 bulan</option>
+              <option value="3 bulan">3 bulan</option>
+              <option value="6 bulan">6 bulan</option>
+              <option value="1 tahun">1 tahun</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -106,16 +111,18 @@ export default function Dashboard() {
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm"
               >
-                <option value="7 days">Last 7 days</option>
-                <option value="30 days">Last 30 days</option>
-                <option value="90 days">Last 90 days</option>
+                <option value="7 hari">7 hari</option>
+                <option value="1 bulan">1 bulan</option>
+                <option value="3 bulan">3 bulan</option>
+                <option value="6 bulan">6 bulan</option>
+                <option value="1 tahun">1 tahun</option>
               </select>
             </div>
           </div>
 
           {/* Simple SVG Chart */}
-          <div className="h-64">
-            <svg className="w-full h-full" viewBox="0 0 400 200">
+          <div className="h-80">
+            <svg className="w-full h-full" viewBox="0 0 400 250">
               {/* Chart Grid */}
               <defs>
                 <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
@@ -129,7 +136,7 @@ export default function Dashboard() {
                 fill="none"
                 stroke="#ea580c"
                 strokeWidth="3"
-                points={chartData.map((point, index) => `${index * 57 + 28.5},${200 - (point.value * 1.5)}`).join(' ')}
+                points={chartData.map((point, index) => `${index * 57 + 28.5},${250 - (point.value * 2)}`).join(' ')}
               />
               
               {/* Chart Points */}
@@ -137,7 +144,7 @@ export default function Dashboard() {
                 <circle
                   key={index}
                   cx={index * 57 + 28.5}
-                  cy={200 - (point.value * 1.5)}
+                  cy={250 - (point.value * 2)}
                   r="4"
                   fill="#ea580c"
                   className="hover:r-6 transition-all"
@@ -149,7 +156,7 @@ export default function Dashboard() {
                 <text
                   key={index}
                   x={index * 57 + 28.5}
-                  y="190"
+                  y="240"
                   textAnchor="middle"
                   className="text-xs fill-gray-500"
                 >
@@ -190,10 +197,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Live Orders and Customer Relationship */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Live Orders */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+      {/* Live Orders */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center">
               <h3 className="text-lg font-semibold text-gray-900">Live Orders</h3>
@@ -238,51 +243,6 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
-        {/* Customer Relationship */}
-        {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Customer Relationship</h3>
-            <Link 
-              href="/admin/messages" 
-              className="text-orange-600 hover:text-orange-700 text-sm flex items-center"
-            >
-              View All <FiExternalLink className="ml-1" size={14} />
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentChats.map((chat, index) => (
-              <Link 
-                key={index} 
-                href={`/admin/messages?chat=${chat.id}`}
-                className="block p-4 border border-gray-100 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{chat.customer}</span>
-                      {chat.unread > 0 && (
-                        <div className="flex items-center">
-                          <FiBell className="text-orange-600 mr-1" size={14} />
-                          <span className="bg-orange-600 text-white text-xs px-2 py-1 rounded-full">
-                            {chat.unread}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1 truncate">{chat.message}</p>
-                    <div className="flex items-center mt-2">
-                      <FiMessageCircle className="text-gray-400 mr-1" size={12} />
-                      <span className="text-xs text-gray-500">{chat.time}</span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div> */}
-        <CustomerRelationship />
-      </div>
     </div>
   );
 }

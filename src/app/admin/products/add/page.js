@@ -9,10 +9,7 @@ import {
   FiUpload,
   FiX,
   FiArrowLeft,
-  FiImage,
-  FiPackage,
-  FiTruck,
-  FiSave
+  FiImage
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -20,7 +17,6 @@ import axios from 'axios';
 export default function AddProductPage() {
   const { getToken } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('general');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [productData, setProductData] = useState({
     name: '',
@@ -28,35 +24,13 @@ export default function AddProductPage() {
     category: '', 
     mrp: 0, 
     price: 0, 
-    inStock: true, 
     stock: 0,
     minStock: 0,
     weight: '',
     dimensions: '',
     model: '',
-    additionalInfo: '',
-    status: 'draft', 
-    sku: '',
-    barcode: '',
-    shippingWeight: '',
-    shippingLength: '',
-    shippingWidth: '',
-    shippingHeight: '',
-    warranty: '',
-    returnPolicy: '',
-    tags: '',
-    metaTitle: '',
-    metaDescription: '',
+    status: 'draft',
   });
-
-  // Product Stock variants for Advanced tab
-  const [productVariants, setProductVariants] = useState([
-    { id: 1, variant: 'Produk A', stock: '' },
-    { id: 2, variant: 'Produk B', stock: '' },
-    { id: 3, variant: 'Produk C', stock: '' },
-    { id: 4, variant: 'Produk D', stock: '' },
-    { id: 5, variant: 'Produk E', stock: '' }
-  ]);
 
   const [images, setImages] = useState([]);
   const [mainImage, setMainImage] = useState(null);
@@ -75,7 +49,6 @@ export default function AddProductPage() {
         });
 
         if (response.data.success) {
-          // Format the API response to match the expected format for the dropdown using IDs
           const formattedCategories = response.data.data.map(cat => ({
             value: cat.id,
             label: cat.name
@@ -98,27 +71,6 @@ export default function AddProductPage() {
       ...prev,
       [name]: value
     }));
-  };
-
-  const handleVariantChange = (id, field, value) => {
-    setProductVariants(prev =>
-      prev.map(variant =>
-        variant.id === id ? { ...variant, [field]: value } : variant
-      )
-    );
-  };
-
-  const addVariant = () => {
-    const newId = Math.max(...productVariants.map(v => v.id)) + 1;
-    setProductVariants(prev => [...prev, {
-      id: newId,
-      variant: `Produk ${String.fromCharCode(65 + prev.length)}`,
-      stock: ''
-    }]);
-  };
-
-  const removeVariant = (id) => {
-    setProductVariants(prev => prev.filter(variant => variant.id !== id));
   };
 
   const handleImageUpload = (files) => {
@@ -227,8 +179,10 @@ export default function AddProductPage() {
           {/* Main Thumbnail */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
-                <FiArrowLeft className="w-5 h-5 text-gray-600" />
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-gray-100 rounded-lg"
+            >              <FiArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
               <h3 className="text-lg font-semibold text-gray-900">Thumbnail</h3>
             </div>
@@ -368,36 +322,9 @@ export default function AddProductPage() {
 
         {/* Right Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Tab Navigation */}
+          {/* Product Information */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-             <div className="flex border-b border-gray-200">
-    <button
-      type="button"
-      onClick={() => setActiveTab('general')}
-      className={`px-6 py-3 text-sm font-medium ${
-        activeTab === 'general'
-          ? 'text-gray-900 border-b-2 border-orange-500'
-          : 'text-gray-500 hover:text-gray-700'
-      }`}
-    >
-      General
-    </button>
-    <button
-      type="button"
-      onClick={() => setActiveTab('advanced')}
-      className={`px-6 py-3 text-sm font-medium ${
-        activeTab === 'advanced'
-          ? 'text-gray-900 border-b-2 border-orange-500'
-          : 'text-gray-500 hover:text-gray-700'
-      }`}
-    >
-      Advanced
-    </button>
-  </div>
-
             <div className="p-6">
-              {/* General Tab Content */}
-              {activeTab === 'general' && (
                 <div className="space-y-6">
                   {/* Product Name */}
                   <div>
@@ -496,53 +423,8 @@ export default function AddProductPage() {
                     </div>
                   </div>
 
-                  {/* SKU and Barcode */}
+                  {/* Stock Quantity and Min Stock */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        SKU
-                      </label>
-                      <input
-                        type="text"
-                        name="sku"
-                        value={productData.sku}
-                        onChange={handleInputChange}
-                        placeholder="Enter product SKU"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Barcode
-                      </label>
-                      <input
-                        type="text"
-                        name="barcode"
-                        value={productData.barcode}
-                        onChange={handleInputChange}
-                        placeholder="Enter product barcode (if any)"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* In Stock and Stock Quantity */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        In Stock
-                      </label>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          name="inStock"
-                          checked={productData.inStock}
-                          onChange={(e) => setProductData(prev => ({ ...prev, inStock: e.target.checked }))}
-                          className="w-5 h-5"
-                        />
-                        <span className="ml-2">Product is in stock</span>
-                      </div>
-                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Stock Quantity
@@ -556,10 +438,6 @@ export default function AddProductPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
-                  </div>
-
-                  {/* Min Stock and Weight */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Minimum Stock Level
@@ -573,6 +451,10 @@ export default function AddProductPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
+                  </div>
+
+                  {/* Weight and Dimensions */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Weight (kg)
@@ -586,21 +468,19 @@ export default function AddProductPage() {
                         className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
-                  </div>
-
-                  {/* Dimensions */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dimensions (L x W x H)
-                    </label>
-                    <input
-                      type="text"
-                      name="dimensions"
-                      value={productData.dimensions}
-                      onChange={handleInputChange}
-                      placeholder="e.g. 10 x 5 x 3 cm"
-                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dimensions (L x W x H)
+                      </label>
+                      <input
+                        type="text"
+                        name="dimensions"
+                        value={productData.dimensions}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 10 x 5 x 3 cm"
+                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
                   </div>
 
                   {/* Model */}
@@ -617,174 +497,7 @@ export default function AddProductPage() {
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
-
-                  {/* Additional Information */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Additional Information
-                    </label>
-                    <textarea
-                      name="additionalInfo"
-                      value={productData.additionalInfo}
-                      onChange={handleInputChange}
-                      placeholder="Additional product information"
-                      rows={4}
-                      className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                    />
-                  </div>
                 </div>
-              )}
-
-              {/* Advanced Tab Content */}
-              {activeTab === 'advanced' && (
-                <div className="space-y-8">
-                  {/* Shipping Information */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <FiTruck className="w-5 h-5 text-gray-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">Shipping Information</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Weight (kg)
-                        </label>
-                        <input
-                          type="text"
-                          name="shippingWeight"
-                          value={productData.shippingWeight}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 2.0 kg"
-                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Length (cm)
-                        </label>
-                        <input
-                          type="text"
-                          name="shippingLength"
-                          value={productData.shippingLength}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 30 cm"
-                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Width (cm)
-                        </label>
-                        <input
-                          type="text"
-                          name="shippingWidth"
-                          value={productData.shippingWidth}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 20 cm"
-                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Height (cm)
-                        </label>
-                        <input
-                          type="text"
-                          name="shippingHeight"
-                          value={productData.shippingHeight}
-                          onChange={handleInputChange}
-                          placeholder="e.g. 15 cm"
-                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Warranty and Return Policy */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Warranty
-                      </label>
-                      <input
-                        type="text"
-                        name="warranty"
-                        value={productData.warranty}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 1 Year"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Return Policy
-                      </label>
-                      <input
-                        type="text"
-                        name="returnPolicy"
-                        value={productData.returnPolicy}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 30 Days"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tags
-                    </label>
-                    <input
-                      type="text"
-                      name="tags"
-                      value={productData.tags}
-                      onChange={handleInputChange}
-                      placeholder="Enter tags separated by commas (e.g., electronics, gadget, new)"
-                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-
-                  {/* SEO Information */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-4">
-                      <FiPackage className="w-5 h-5 text-gray-600" />
-                      <h3 className="text-lg font-semibold text-gray-900">SEO Information</h3>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Meta Title
-                        </label>
-                        <input
-                          type="text"
-                          name="metaTitle"
-                          value={productData.metaTitle}
-                          onChange={handleInputChange}
-                          placeholder="Enter meta title for SEO"
-                          className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Meta Description
-                        </label>
-                        <textarea
-                          name="metaDescription"
-                          value={productData.metaDescription}
-                          onChange={handleInputChange}
-                          placeholder="Enter meta description for SEO"
-                          rows={3}
-                          className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -802,7 +515,6 @@ export default function AddProductPage() {
                 </>
               ) : (
                 <>
-                  <FiSave className="w-4 h-4" />
                   Simpan
                 </>
               )}

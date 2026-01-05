@@ -39,7 +39,7 @@ export default function UsersManagementPage() {
         name: user.name,
         email: user.email,
         avatar: user.image || '/images/users/default.jpg',
-        registeredAt: new Date().toISOString(), 
+        registeredAt: user.createdAt || user.created_at || user.registeredAt || new Date().toISOString(), 
       }));
 
       setUsers(transformedUsers);
