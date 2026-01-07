@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
 import RevenueChart from '@/components/store/RevenueChart';
+import BestProducts from '@/components/store/BestProducts';
 import {
   FiFilter,
   FiCalendar,
@@ -39,13 +40,6 @@ export default function Dashboard() {
     setRecentChats(mockChats);
   }, []);
 
-  const bestProducts = [
-    { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8 },
-    { name: 'Smart Watch', sales: 987, revenue: 'Rp 98,700,000', rating: 4.7 },
-    { name: 'Laptop Stand', sales: 756, revenue: 'Rp 37,800,000', rating: 4.9 },
-    { name: 'USB-C Hub', sales: 654, revenue: 'Rp 32,700,000', rating: 4.6 },
-    { name: 'Phone Case', sales: 543, revenue: 'Rp 16,290,000', rating: 4.5 }
-  ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -116,33 +110,7 @@ export default function Dashboard() {
         </div>
 
         {/* Best Product Sales */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Best Product Sales</h3>
-            <Link href="/admin/products" className="text-orange-600 hover:text-orange-700 text-sm">
-              View All
-            </Link>
-          </div>
-          <div className="space-y-4">
-            {bestProducts.map((product, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 text-sm">{product.name}</h4>
-                  <div className="flex items-center mt-1">
-                    <FiStar className="text-yellow-400 mr-1" size={14} />
-                    <span className="text-xs text-gray-600">{product.rating}</span>
-                    <span className="text-xs text-gray-400 mx-2">•</span>
-                    <span className="text-xs text-gray-600">{product.sales} sold</span>
-                  </div>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{product.revenue}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-green-600 text-sm font-medium">{product.change}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <BestProducts />
       </div>
 
       {/* Live Orders */}
