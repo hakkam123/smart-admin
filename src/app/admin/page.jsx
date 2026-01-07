@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
-import { 
+import {
   FiFilter,
   FiCalendar,
   FiClock,
@@ -40,10 +40,10 @@ export default function Dashboard() {
 
   const bestProducts = [
     { name: 'Wireless Headphones', sales: 1245, revenue: 'Rp 62,250,000', rating: 4.8 },
-    { name: 'Smart Watch', sales: 987, revenue: 'Rp 98,700,000', rating: 4.7},
-    { name: 'Laptop Stand', sales: 756, revenue: 'Rp 37,800,000', rating: 4.9},
-    { name: 'USB-C Hub', sales: 654, revenue: 'Rp 32,700,000', rating: 4.6},
-    { name: 'Phone Case', sales: 543, revenue: 'Rp 16,290,000', rating: 4.5}
+    { name: 'Smart Watch', sales: 987, revenue: 'Rp 98,700,000', rating: 4.7 },
+    { name: 'Laptop Stand', sales: 756, revenue: 'Rp 37,800,000', rating: 4.9 },
+    { name: 'USB-C Hub', sales: 654, revenue: 'Rp 32,700,000', rating: 4.6 },
+    { name: 'Phone Case', sales: 543, revenue: 'Rp 16,290,000', rating: 4.5 }
   ];
 
   const getStatusColor = (status) => {
@@ -78,8 +78,8 @@ export default function Dashboard() {
         <div className="flex items-center space-x-3">
           <div className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
             <FiCalendar className="mr-2" />
-            <select 
-              value={selectedPeriod} 
+            <select
+              value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="bg-transparent outline-none cursor-pointer"
             >
@@ -94,7 +94,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <CardSeller />
+      <CardSeller period={selectedPeriod} />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -106,8 +106,8 @@ export default function Dashboard() {
               <p className="text-gray-600">Revenue trends over the past week</p>
             </div>
             <div className="flex items-center space-x-2">
-              <select 
-                value={selectedPeriod} 
+              <select
+                value={selectedPeriod}
                 onChange={(e) => setSelectedPeriod(e.target.value)}
                 className="px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm"
               >
@@ -126,11 +126,11 @@ export default function Dashboard() {
               {/* Chart Grid */}
               <defs>
                 <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+                  <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1" />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#grid)" />
-              
+
               {/* Chart Line */}
               <polyline
                 fill="none"
@@ -138,7 +138,7 @@ export default function Dashboard() {
                 strokeWidth="3"
                 points={chartData.map((point, index) => `${index * 57 + 28.5},${250 - (point.value * 2)}`).join(' ')}
               />
-              
+
               {/* Chart Points */}
               {chartData.map((point, index) => (
                 <circle
@@ -150,7 +150,7 @@ export default function Dashboard() {
                   className="hover:r-6 transition-all"
                 />
               ))}
-              
+
               {/* X-axis labels */}
               {chartData.map((point, index) => (
                 <text
@@ -199,50 +199,50 @@ export default function Dashboard() {
 
       {/* Live Orders */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center">
-              <h3 className="text-lg font-semibold text-gray-900">Live Orders</h3>
-              <div className="ml-3 flex items-center">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="ml-2 text-sm text-gray-600">Live</span>
-              </div>
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center">
+            <h3 className="text-lg font-semibold text-gray-900">Live Orders</h3>
+            <div className="ml-3 flex items-center">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="ml-2 text-sm text-gray-600">Live</span>
             </div>
-            <Link 
-              href="/admin/orders" 
-              className="text-orange-600 hover:text-orange-700 text-sm flex items-center"
-            >
-              View All
-            </Link>
           </div>
-          <div className="space-y-3">
-            {liveOrders.map((order, index) => (
-              <Link 
-                key={index} 
-                href={`/admin/orders/${order.id.replace('#', '')}`}
-                className="block p-4 border border-gray-100 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900">{order.id}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mt-1">{order.customer}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="font-medium text-gray-900">{order.amount}</span>
-                      <span className="text-xs text-gray-500 flex items-center">
-                        <FiClock className="mr-1" size={12} />
-                        {order.time}
-                      </span>
-                    </div>
+          <Link
+            href="/admin/orders"
+            className="text-orange-600 hover:text-orange-700 text-sm flex items-center"
+          >
+            View All
+          </Link>
+        </div>
+        <div className="space-y-3">
+          {liveOrders.map((order, index) => (
+            <Link
+              key={index}
+              href={`/admin/orders/${order.id.replace('#', '')}`}
+              className="block p-4 border border-gray-100 rounded-lg hover:border-orange-200 hover:bg-orange-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-gray-900">{order.id}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-1">{order.customer}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="font-medium text-gray-900">{order.amount}</span>
+                    <span className="text-xs text-gray-500 flex items-center">
+                      <FiClock className="mr-1" size={12} />
+                      {order.time}
+                    </span>
                   </div>
                 </div>
-              </Link>
-            ))}
-          </div>
+              </div>
+            </Link>
+          ))}
         </div>
+      </div>
     </div>
   );
 }
