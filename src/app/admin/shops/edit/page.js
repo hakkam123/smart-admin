@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
@@ -27,6 +27,9 @@ export default function EditShopPage({ params }) {
     website: '',
     description: '',
     shopImage: '/api/placeholder/150/150',
+    bankName: '',
+    bankAccountNumber: '',
+    bankHolderName: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -34,7 +37,7 @@ export default function EditShopPage({ params }) {
   const [imagePreview, setImagePreview] = useState(null);
 
   // Load shop data when component mounts
-  const loadShopData = React.useCallback(async () => {
+  const loadShopData = useCallback(async () => {
     setLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -56,6 +59,9 @@ export default function EditShopPage({ params }) {
           website: storeData.website || '',
           description: storeData.description,
           shopImage: storeData.logo || '/api/placeholder/150/150',
+          bankName: storeData.bankName || '',
+          bankAccountNumber: storeData.bankAccountNumber || '',
+          bankHolderName: storeData.bankHolderName || '',
         });
       }
     } catch (error) {
@@ -70,7 +76,7 @@ export default function EditShopPage({ params }) {
     loadShopData();
   }, [loadShopData]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (field, value) => {
     setShopData(prev => ({
       ...prev,
       [field]: value
@@ -134,7 +140,7 @@ export default function EditShopPage({ params }) {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
-      
+
       // Prepare form data for API request
       const storeData = new FormData();
       storeData.append('name', shopData.name);
@@ -145,13 +151,24 @@ export default function EditShopPage({ params }) {
       storeData.append('address', shopData.address);
       storeData.append('website', shopData.website || '');
 
+      // Add bank information
+      if (shopData.bankName) {
+        storeData.append('bankName', shopData.bankName);
+      }
+      if (shopData.bankAccountNumber) {
+        storeData.append('bankAccountNumber', shopData.bankAccountNumber);
+      }
+      if (shopData.bankHolderName) {
+        storeData.append('bankHolderName', shopData.bankHolderName);
+      }
+
       // Add image if provided
       if (shopData.shopImageFile) {
         storeData.append('logo', shopData.shopImageFile);
       }
 
       const response = await axios.put(`${baseUrl}/api/store`, storeData, {
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
@@ -368,6 +385,51 @@ export default function EditShopPage({ params }) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Describe your shop and what you sell"
                 ></textarea>
+              </div>
+            </div>
+          </div>
+          {/* Bank Information */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Bank Information</h2>
+            <p className="text-sm text-gray-600 mb-4">Add your bank account details for receiving payments</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankName}
+                  onChange={(e) => handleInputChange('bankName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="e.g., Bank BCA, Bank Mandiri"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Account Holder Name
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankHolderName}
+                  onChange={(e) => handleInputChange('bankHolderName', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter account holder name"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Account Number
+                </label>
+                <input
+                  type="text"
+                  value={shopData.bankAccountNumber}
+                  onChange={(e) => handleInputChange('bankAccountNumber', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                  placeholder="Enter bank account number"
+                />
               </div>
             </div>
           </div>

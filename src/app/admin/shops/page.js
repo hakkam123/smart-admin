@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@clerk/nextjs';
-import { 
+import {
   FiMail,
   FiPhone,
   FiMapPin,
@@ -36,6 +36,9 @@ export default function ShopsPage() {
     shopImage: '/api/placeholder/150/150',
     category: '',
     createdAt: '',
+    bankName: '',
+    bankAccountNumber: '',
+    bankHolderName: '',
   });
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -60,7 +63,7 @@ export default function ShopsPage() {
 
       if (response.data.success) {
         const storeData = response.data.data;
-        
+
         // Set shop data
         setShopData({
           name: storeData.name,
@@ -75,6 +78,9 @@ export default function ShopsPage() {
           shopImage: storeData.logo || '/api/placeholder/150/150',
           category: storeData.category?.name || 'General',
           createdAt: storeData.createdAt ? new Date(storeData.createdAt).toISOString().split('T')[0] : '',
+          bankName: storeData.bankName || '',
+          bankAccountNumber: storeData.bankAccountNumber || '',
+          bankHolderName: storeData.bankHolderName || '',
         });
 
         // Set stats
@@ -158,7 +164,7 @@ export default function ShopsPage() {
           </div>
         </div>
         <div className="flex space-x-3">
-          <Link 
+          <Link
             href="/admin/shops/edit"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
           >
@@ -200,7 +206,7 @@ export default function ShopsPage() {
                 </div>
                 <p className="font-medium text-gray-900">{stats.totalOrders}</p>
               </div>
-              
+
               <div className="text-sm">
                 <div className="flex items-center text-gray-600 mb-1">
                   <FiTrendingUp className="h-4 w-4 mr-2" />
@@ -314,6 +320,27 @@ export default function ShopsPage() {
                   <FiCalendar className="h-4 w-4 text-gray-400 mr-2" />
                   <p className="text-gray-900">{new Date(shopData.createdAt).toLocaleDateString()}</p>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Information */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Bank Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bank Name</label>
+                <p className="text-gray-900">{shopData.bankName || 'Belum ada'}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Holder Name</label>
+                <p className="text-gray-900">{shopData.bankHolderName || 'Belum ada'}</p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Account Number</label>
+                <p className="text-gray-900 font-mono">{shopData.bankAccountNumber || 'Belum ada'}</p>
               </div>
             </div>
           </div>
