@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import CardSeller from '@/components/store/CardSeller';
+import RevenueChart from '@/components/store/RevenueChart';
 import {
   FiFilter,
   FiCalendar,
@@ -56,16 +57,6 @@ export default function Dashboard() {
     }
   };
 
-  // Mock chart data points for simple SVG chart
-  const chartData = [
-    { day: 'Mon', value: 65 },
-    { day: 'Tue', value: 75 },
-    { day: 'Wed', value: 55 },
-    { day: 'Thu', value: 85 },
-    { day: 'Fri', value: 70 },
-    { day: 'Sat', value: 90 },
-    { day: 'Sun', value: 80 }
-  ];
 
   return (
     <div className="p-6 space-y-6">
@@ -103,7 +94,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Sales Analytics</h3>
-              <p className="text-gray-600">Revenue trends over the past week</p>
+              <p className="text-gray-600">Revenue trends for {selectedPeriod}</p>
             </div>
             <div className="flex items-center space-x-2">
               <select
@@ -120,51 +111,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Simple SVG Chart */}
-          <div className="h-80">
-            <svg className="w-full h-full" viewBox="0 0 400 250">
-              {/* Chart Grid */}
-              <defs>
-                <pattern id="grid" width="57" height="40" patternUnits="userSpaceOnUse">
-                  <path d="M 57 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-
-              {/* Chart Line */}
-              <polyline
-                fill="none"
-                stroke="#ea580c"
-                strokeWidth="3"
-                points={chartData.map((point, index) => `${index * 57 + 28.5},${250 - (point.value * 2)}`).join(' ')}
-              />
-
-              {/* Chart Points */}
-              {chartData.map((point, index) => (
-                <circle
-                  key={index}
-                  cx={index * 57 + 28.5}
-                  cy={250 - (point.value * 2)}
-                  r="4"
-                  fill="#ea580c"
-                  className="hover:r-6 transition-all"
-                />
-              ))}
-
-              {/* X-axis labels */}
-              {chartData.map((point, index) => (
-                <text
-                  key={index}
-                  x={index * 57 + 28.5}
-                  y="240"
-                  textAnchor="middle"
-                  className="text-xs fill-gray-500"
-                >
-                  {point.day}
-                </text>
-              ))}
-            </svg>
-          </div>
+          {/* Revenue Chart Component */}
+          <RevenueChart period={selectedPeriod} />
         </div>
 
         {/* Best Product Sales */}
