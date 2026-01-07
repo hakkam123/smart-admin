@@ -9,7 +9,9 @@ import {
   FiUpload,
   FiX,
   FiArrowLeft,
-  FiImage
+  FiImage,
+  FiPlus,
+  FiTrash2
 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -21,14 +23,11 @@ export default function AddProductPage() {
   const [productData, setProductData] = useState({
     name: '',
     description: '',
-    category: '', 
-    mrp: 0, 
-    price: 0, 
-    stock: 0,
-    minStock: 0,
+    categories: [], // Changed to array for multiple categories
+    mrp: '', // Actual Price (optional)
+    price: 0, // Offer price (required)
     weight: '',
     dimensions: '',
-    model: '',
     status: 'draft',
   });
 
@@ -37,6 +36,14 @@ export default function AddProductPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  // Product variants (models)
+  const [variants, setVariants] = useState([
+    { id: Date.now(), name: '', stock: 0 }
+  ]);
+
+  // Calculate total stock from variants
+  const totalStock = variants.reduce((sum, variant) => sum + (parseInt(variant.stock) || 0), 0);
 
   // Fetch categories from API
   useEffect(() => {
@@ -71,6 +78,33 @@ export default function AddProductPage() {
       ...prev,
       [name]: value
     }));
+  };
+
+  // Handle category selection (multiple)
+  const handleCategoryChange = (categoryId) => {
+    setProductData(prev => {
+      const categories = prev.categories.includes(categoryId)
+        ? prev.categories.filter(id => id !== categoryId)
+        : [...prev.categories, categoryId];
+      return { ...prev, categories };
+    });
+  };
+
+  // Variant handlers
+  const addVariant = () => {
+    setVariants(prev => [...prev, { id: Date.now(), name: '', stock: 0 }]);
+  };
+
+  const removeVariant = (id) => {
+    if (variants.length > 1) {
+      setVariants(prev => prev.filter(v => v.id !== id));
+    }
+  };
+
+  const updateVariant = (id, field, value) => {
+    setVariants(prev => prev.map(v =>
+      v.id === id ? { ...v, [field]: value } : v
+    ));
   };
 
   const handleImageUpload = (files) => {
@@ -128,16 +162,68 @@ export default function AddProductPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validation
+    if (!mainImage) {
+      toast.error('Please upload at least one product image (thumbnail)');
+      return;
+    }
+
+    if (productData.categories.length === 0) {
+      toast.error('Please select at least one category');
+      return;
+    }
+
+    if (!productData.name.trim()) {
+      toast.error('Product name is required');
+      return;
+    }
+
+    if (!productData.description.trim()) {
+      toast.error('Product description is required');
+      return;
+    }
+
+    if (!productData.price || productData.price <= 0) {
+      toast.error('Offer price is required and must be greater than 0');
+      return;
+    }
+
+    if (totalStock <= 0) {
+      toast.error('Total stock must be greater than 0');
+      return;
+    }
+
+    // Validate variants
+    const validVariants = variants.filter(v => v.name.trim() && v.stock > 0);
+    if (validVariants.length === 0) {
+      toast.error('Please add at least one model with name and stock');
+      return;
+    }
+
     setIsSubmitting(true);
 
     // Prepare form data for API submission
     const formData = new FormData();
 
     // Add product data
-    Object.keys(productData).forEach(key => {
-      formData.append(key, productData[key]);
-      console.log(key, productData[key]);
-    });
+    formData.append('name', productData.name);
+    formData.append('description', productData.description);
+    formData.append('price', productData.price);
+    formData.append('stock', totalStock);
+    formData.append('weight', productData.weight);
+    formData.append('dimensions', productData.dimensions);
+    formData.append('status', productData.status);
+
+    // Add mrp if provided
+    if (productData.mrp) {
+      formData.append('mrp', productData.mrp);
+    }
+
+    // Add categories as JSON string
+    formData.append('categories', JSON.stringify(productData.categories));
+
+    // Add variants as JSON string
+    formData.append('variants', JSON.stringify(validVariants));
 
     // Add images
     images.forEach((image) => {
@@ -172,19 +258,22 @@ export default function AddProductPage() {
 
   return (
     <div className="space-y-6">
-
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Sidebar - Image Upload */}
         <div className="lg:col-span-1 space-y-6">
           {/* Main Thumbnail */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-4">
-            <button
-              onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >              <FiArrowLeft className="w-5 h-5 text-gray-600" />
-            </button>
-              <h3 className="text-lg font-semibold text-gray-900">Thumbnail</h3>
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <FiArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Thumbnail <span className="text-red-500">*</span>
+              </h3>
             </div>
 
             {/* Main Image Display */}
@@ -209,9 +298,8 @@ export default function AddProductPage() {
                 </div>
               ) : (
                 <div
-                  className={`w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${
-                    isDragOver ? 'border-orange-400 bg-orange-50' : 'border-gray-300 hover:border-orange-400'
-                  }`}
+                  className={`w-full h-48 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer transition-colors ${isDragOver ? 'border-orange-400 bg-orange-50' : 'border-gray-300 hover:border-orange-400'
+                    }`}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -231,9 +319,8 @@ export default function AddProductPage() {
                 {images.map((image) => (
                   <div
                     key={image.id}
-                    className={`relative cursor-pointer ${
-                      mainImage?.id === image.id ? 'ring-2 ring-orange-500' : ''
-                    }`}
+                    className={`relative cursor-pointer ${mainImage?.id === image.id ? 'ring-2 ring-orange-500' : ''
+                      }`}
                     onClick={() => setAsMainImage(image)}
                   >
                     <Image
@@ -301,22 +388,36 @@ export default function AddProductPage() {
             </select>
           </div>
 
-          {/* Product Categories */}
+          {/* Product Categories (Multiple Selection) */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Categories</h3>
-            <select
-              name="category"
-              value={productData.category}
-              onChange={handleInputChange}
-              className="w-full p-3 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Select Categories</option>
-              {categories.map(category => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Product Categories <span className="text-red-500">*</span>
+            </h3>
+            <p className="text-xs text-gray-500 mb-3">Select at least one category</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {categoriesLoading ? (
+                <p className="text-sm text-gray-500">Loading categories...</p>
+              ) : categories.length === 0 ? (
+                <p className="text-sm text-gray-500">No categories available</p>
+              ) : (
+                categories.map(category => (
+                  <label key={category.value} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={productData.categories.includes(category.value)}
+                      onChange={() => handleCategoryChange(category.value)}
+                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <span className="text-sm text-gray-700">{category.label}</span>
+                  </label>
+                ))
+              )}
+            </div>
+            {productData.categories.length > 0 && (
+              <p className="text-xs text-green-600 mt-2">
+                {productData.categories.length} categor{productData.categories.length > 1 ? 'ies' : 'y'} selected
+              </p>
+            )}
           </div>
         </div>
 
@@ -325,184 +426,183 @@ export default function AddProductPage() {
           {/* Product Information */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="p-6">
-                <div className="space-y-6">
-                  {/* Product Name */}
+              <div className="space-y-6">
+                {/* Product Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Product Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={productData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter product name"
+                    required
+                    className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={productData.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter product description"
+                    required
+                    rows={6}
+                    className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+                  />
+                </div>
+
+                {/* Price Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Product Name
+                      Actual Price (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      name="mrp"
+                      value={productData.mrp}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      min="0"
+                      step="0.01"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Optional - Original price before discount
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Offer Price (Rp) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={productData.price}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      required
+                      min="0"
+                      step="0.01"
+                      className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                    {productData.mrp && productData.price && productData.mrp > productData.price && (
+                      <p className="text-xs text-green-600 mt-1">
+                        💰 Discount: {Math.round(((productData.mrp - productData.price) / productData.mrp) * 100)}% off
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Product Models/Variants */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Product Models <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addVariant}
+                      className="flex items-center gap-1 text-sm text-orange-600 hover:text-orange-700"
+                    >
+                      <FiPlus className="w-4 h-4" />
+                      Add Model
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Add different models/variants for this product. Total stock will be calculated automatically.
+                  </p>
+                  <div className="space-y-3">
+                    {variants.map((variant, index) => (
+                      <div key={variant.id} className="flex gap-2 items-start">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={variant.name}
+                            onChange={(e) => updateVariant(variant.id, 'name', e.target.value)}
+                            placeholder={`Model name ${index + 1}`}
+                            className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        <div className="w-32">
+                          <input
+                            type="number"
+                            value={variant.stock}
+                            onChange={(e) => updateVariant(variant.id, 'stock', parseInt(e.target.value) || 0)}
+                            placeholder="Stock"
+                            min="0"
+                            className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                          />
+                        </div>
+                        {variants.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeVariant(variant.id)}
+                            className="p-3 text-red-500 hover:bg-red-50 rounded-lg"
+                          >
+                            <FiTrash2 className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Total Stock:</strong> {totalStock} units
+                    </p>
+                  </div>
+                </div>
+
+                {/* Weight and Dimensions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Weight (kg)
                     </label>
                     <input
                       type="text"
-                      name="name"
-                      value={productData.name}
+                      name="weight"
+                      value={productData.weight}
                       onChange={handleInputChange}
-                      placeholder="Enter product name"
+                      placeholder="e.g. 1.5 kg"
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
-
-                  {/* Description */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      name="description"
-                      value={productData.description}
-                      onChange={handleInputChange}
-                      placeholder="Enter product description"
-                      rows={6}
-                      className="w-full p-4 border border-gray-300 text-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                    />
-                  </div>
-
-                  {/* Price Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Actual Price ($)
-                      </label>
-                      <input
-                        type="number"
-                        name="mrp"
-                        value={productData.mrp}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Offer Price ($)
-                      </label>
-                      <input
-                        type="number"
-                        name="price"
-                        value={productData.price}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Category and Status */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Category
-                      </label>
-                      <select
-                        name="category"
-                        value={productData.category}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="">Select a category</option>
-                        {categories.map(category => (
-                          <option key={category.value} value={category.value}>
-                            {category.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Status
-                      </label>
-                      <select
-                        name="status"
-                        value={productData.status}
-                        onChange={handleInputChange}
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="archived">Archived</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Stock Quantity and Min Stock */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Stock Quantity
-                      </label>
-                      <input
-                        type="number"
-                        name="stock"
-                        value={productData.stock}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Minimum Stock Level
-                      </label>
-                      <input
-                        type="number"
-                        name="minStock"
-                        value={productData.minStock}
-                        onChange={handleInputChange}
-                        placeholder="0"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Weight and Dimensions */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Weight (kg)
-                      </label>
-                      <input
-                        type="text"
-                        name="weight"
-                        value={productData.weight}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 1.5 kg"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dimensions (L x W x H)
-                      </label>
-                      <input
-                        type="text"
-                        name="dimensions"
-                        value={productData.dimensions}
-                        onChange={handleInputChange}
-                        placeholder="e.g. 10 x 5 x 3 cm"
-                        className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Model */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Model
+                      Dimensions (L x W x H)
                     </label>
                     <input
                       type="text"
-                      name="model"
-                      value={productData.model}
+                      name="dimensions"
+                      value={productData.dimensions}
                       onChange={handleInputChange}
-                      placeholder="Enter product model (if any)"
+                      placeholder="e.g. 10 x 5 x 3 cm"
                       className="w-full p-3 border border-gray-300 rounded-lg text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
                 </div>
+              </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSubmitting}
@@ -515,7 +615,7 @@ export default function AddProductPage() {
                 </>
               ) : (
                 <>
-                  Simpan
+                  Save Product
                 </>
               )}
             </button>
