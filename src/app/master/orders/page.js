@@ -423,7 +423,7 @@ export default function OrdersManagementPage() {
                     <div className="space-y-2">
                       <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(order.status)}`}>
                         {getStatusIcon(order.status)}
-                        <span className="ml-1">{order.status}</span>
+                        <span className="ml-1">{order.status.toLowerCase()}</span>
                       </span>
                       <div>
                         <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getPaymentStatusColor(order.paymentStatus)}`}>

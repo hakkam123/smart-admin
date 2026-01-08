@@ -22,7 +22,6 @@ import {
 
 export default function ReportsPage() {
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedPriority, setSelectedPriority] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('7 hari');
 
@@ -53,7 +52,7 @@ export default function ReportsPage() {
     const totalThisMonth = reports.filter(r => inCurrentMonth(r.submittedAt || r.reportDate)).length;
     const newThisMonth = reports.filter(r => lower(r.status) === 'new' && inCurrentMonth(r.submittedAt || r.reportDate)).length;
     const resolvedThisMonth = reports.filter(r => (r.resolvedAt || null) && inCurrentMonth(r.resolvedAt)).length;
-    const highThisMonth = reports.filter(r => lower(r.priority) === 'high' && inCurrentMonth(r.submittedAt || r.reportDate)).length;
+  // priority statistics removed
 
     const makeEntry = (title, value, monthCount, icon, color) => ({
       title,
@@ -68,7 +67,7 @@ export default function ReportsPage() {
       makeEntry('Total Reports', total, totalThisMonth, FiAlertTriangle, 'bg-red-500'),
       makeEntry('New', reports.filter(r => lower(r.status) === 'new').length, newThisMonth, FiClock, 'bg-yellow-500'),
       makeEntry('Resolved', reports.filter(r => lower(r.status) === 'resolved').length, resolvedThisMonth, FiCheckCircle, 'bg-green-500'),
-      makeEntry('High Priority', reports.filter(r => lower(r.priority) === 'high').length, highThisMonth, FiAlertCircle, 'bg-orange-500')
+  // High Priority stat removed
     ];
   }, [reports]);
 
@@ -88,7 +87,8 @@ export default function ReportsPage() {
           }
         }
 
-        const res = await axios.get(`${API_BASE}/api/store/reports`, { headers });
+  // request product-only reports from the store-scoped API
+  const res = await axios.get(`${API_BASE}/api/store/reports?type=product`, { headers });
         if (res.data && res.data.reports) {
           const normalized = res.data.reports.map(r => {
             // helper: format diff into hours/days per spec
@@ -150,7 +150,9 @@ export default function ReportsPage() {
           });
           console.log('Fetched reports:', normalized);
 
-          setReports(normalized);
+          // ensure only product reports are shown (defensive client-side filter)
+          const productOnly = normalized.filter(r => r.reportType === 'product');
+          setReports(productOnly);
         } else {
           setReports([]);
         }
@@ -173,8 +175,8 @@ export default function ReportsPage() {
         return 'bg-blue-100 text-blue-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -185,22 +187,10 @@ export default function ReportsPage() {
     return String(status).replace(/_/g, ' ').replace(/-/g, ' ');
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // priority coloring removed along with priority UI
 
   const filteredReports = reports.filter(report => {
     const matchesStatus = selectedStatus === 'all' || report.status === selectedStatus;
-    const matchesPriority = selectedPriority === 'all' || report.priority === selectedPriority;
     const q = searchTerm.trim().toLowerCase();
     const matchesSearch = q === '' ||
       (report.customer?.name || '').toLowerCase().includes(q) ||
@@ -208,7 +198,7 @@ export default function ReportsPage() {
       (report.issue || '').toLowerCase().includes(q) ||
       (report.id || '').toLowerCase().includes(q);
 
-    return matchesStatus && matchesPriority && matchesSearch;
+    return matchesStatus && matchesSearch;
   });
 
   return (
@@ -288,16 +278,7 @@ export default function ReportsPage() {
               <option value="closed">Closed</option>
               <option value="escalated">Escalated</option>
             </select>
-            <select
-              className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              value={selectedPriority}
-              onChange={(e) => setSelectedPriority(e.target.value)}
-            >
-              <option value="all">All Priority</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+            {/* priority filter removed */}
           </div>
         </div>
 
@@ -318,9 +299,7 @@ export default function ReportsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Issue
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Priority
-                </th>
+                {/* Priority column removed */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -379,11 +358,7 @@ export default function ReportsPage() {
                       Response: {report.responseTime}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(report.priority)}`}>
-                      {report.priority}
-                    </span>
-                  </td>
+                  {/* Priority cell removed */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
                       {formatStatusLabel(report.status)}

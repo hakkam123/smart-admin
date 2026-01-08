@@ -32,6 +32,8 @@ export default function ReportDetailPage({ params }) {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState('new');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const fetchReportDetail = async () => {
@@ -67,6 +69,7 @@ export default function ReportDetailPage({ params }) {
           
           console.log('Report detail:', normalizedReport);
           setReport(normalizedReport);
+          setStatus(normalizedReport.status || 'new');
         } else {
           setError('Report not found');
         }
@@ -84,13 +87,13 @@ export default function ReportDetailPage({ params }) {
   const getStatusColor = (status) => {
     switch (status) {
       case 'new':
-        return 'bg-blue-100 text-blue-800';
-      case 'reviewed':
         return 'bg-yellow-100 text-yellow-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -100,29 +103,18 @@ export default function ReportDetailPage({ params }) {
     switch (status) {
       case 'new':
         return <FiAlertCircle className="h-4 w-4" />;
-      case 'reviewed':
+      case 'in_progress':
         return <FiClock className="h-4 w-4" />;
       case 'resolved':
         return <FiCheckCircle className="h-4 w-4" />;
-      case 'closed':
+      case 'rejected':
         return <FiXCircle className="h-4 w-4" />;
       default:
         return <FiFileText className="h-4 w-4" />;
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // priority display removed for master report detail
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -132,6 +124,41 @@ export default function ReportDetailPage({ params }) {
         return <FiPackage className="h-5 w-5 text-green-600" />;
       default:
         return <FiFlag className="h-5 w-5 text-gray-600" />;
+    }
+  };
+
+  const ALL_STATUSES = ['NEW','IN_PROGRESS','RESOLVED','REJECTED'];
+
+  const handleUpdateStatus = async () => {
+    try {
+      setUpdating(true);
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+      const headers = { 'Content-Type': 'application/json' };
+      if (getToken) {
+        try {
+          const token = await getToken();
+          if (token) headers.Authorization = `Bearer ${token}`;
+        } catch (err) { console.warn('Failed to get token', err); }
+      }
+
+      const rid = id;
+      if (!rid) return;
+
+      const selectEl = typeof document !== 'undefined' ? document.getElementById('report-status-select-master') : null;
+      const toSend = selectEl ? String(selectEl.value).toUpperCase() : String(status).toUpperCase();
+      const res = await axios.patch(`${API_BASE}/api/admin/reports/${rid}`, { status: toSend }, { headers });
+      if (res.data && res.data.report) {
+        // refresh page to re-fetch normalized data
+        window.alert('Status updated');
+        window.location.reload();
+      } else if (res.data && res.data.error) {
+        window.alert('Failed to update: ' + res.data.error);
+      }
+    } catch (err) {
+      console.error('Failed to update status', err);
+      window.alert('Failed to update status');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -221,11 +248,7 @@ export default function ReportDetailPage({ params }) {
                     {getStatusIcon(report.status)}
                     <span className="ml-1 capitalize">{report.status}</span>
                   </span>
-                  {report.priority && (
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(report.priority)}`}>
-                      Priority: {report.priority}
-                    </span>
-                  )}
+                  {/* priority display removed */}
                 </div>
               </div>
               
@@ -235,6 +258,8 @@ export default function ReportDetailPage({ params }) {
               </div>
             </div>
           </div>
+
+          {/* Report Management moved to sidebar */}
 
           {/* Attachments */}
           {report.attachments && report.attachments.length > 0 && (
@@ -415,6 +440,68 @@ export default function ReportDetailPage({ params }) {
             </div>
           </div>
 
+          {/* Report Management (only for store reports) - moved below Timeline */}
+          {String(report.reportType).toLowerCase() === 'store' && (
+            <div className="bg-white rounded-lg shadow mt-4">
+              <div className="p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Report Management</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    {String(report.status).toLowerCase() === 'resolved' || report.resolvedAt || String(report.status).toLowerCase() === 'rejected' ? (
+                      <p className="text-sm text-gray-900 font-medium">{String(report.status).toUpperCase()}</p>
+                    ) : (
+                      (() => {
+                        const occurred = new Set();
+                        if (report?.submittedAt) occurred.add('NEW');
+                        if (report?.reviewedAt) occurred.add('IN_PROGRESS');
+                        if (report?.resolvedAt) occurred.add('RESOLVED');
+                        if (report?.rejectedAt) occurred.add('REJECTED');
+                        if (report?.status) occurred.add(String(report.status).toUpperCase());
+                        const currentStatusLower = report?.status ? String(report.status).toLowerCase() : null;
+                        let allowedStatuses = ALL_STATUSES.filter(s => !occurred.has(s));
+                        const hasResolved = !!report?.resolvedAt;
+                        const hasRejected = !!report?.rejectedAt;
+                        if (currentStatusLower === 'resolved' || hasResolved || currentStatusLower === 'rejected' || hasRejected) {
+                          allowedStatuses = [];
+                        } else {
+                          if (currentStatusLower !== 'in_progress') {
+                            allowedStatuses = allowedStatuses.filter(s => s !== 'RESOLVED');
+                          }
+                        }
+
+                        return (
+                          <select id="report-status-select-master"
+                            value={status}
+                            onChange={(e) => setStatus(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            disabled={updating}
+                          >
+                            {allowedStatuses && allowedStatuses.length > 0 ? (
+                              allowedStatuses.map((s) => (
+                                <option key={s} value={String(s).toLowerCase()}>{String(s).toUpperCase()}</option>
+                              ))
+                            ) : (
+                              <option value={report.status}>{String(report.status).toUpperCase()}</option>
+                            )}
+                          </select>
+                        );
+                      })()
+                    )}
+                  </div>
+
+                  {!(String(report.status).toLowerCase() === 'resolved' || report.resolvedAt || String(report.status).toLowerCase() === 'rejected') && (
+                    <div>
+                      <button onClick={handleUpdateStatus} disabled={updating} className={`w-full px-4 py-2 ${updating ? 'opacity-70 cursor-not-allowed' : ''} bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 font-medium`}>
+                        {updating ? 'Updating...' : 'Update Report'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Additional Info */}
           <div className="bg-white rounded-lg shadow">
             <div className="p-6">
@@ -428,18 +515,7 @@ export default function ReportDetailPage({ params }) {
                   <span className="text-sm font-medium text-gray-500">Target ID:</span>
                   <span className="text-sm text-gray-900">{report.targetId}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-gray-500">Reporter ID:</span>
-                  <span className="text-sm text-gray-900">{report.reporterId}</span>
-                </div>
-                {report.suggestedPriority && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Suggested Priority:</span>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(report.suggestedPriority)}`}>
-                      {report.suggestedPriority}
-                    </span>
-                  </div>
-                )}
+                {/* suggested priority removed from master detail */}
               </div>
             </div>
           </div>

@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
-export default function CardAdmin() {
+export default function CardAdmin({ selectedPeriod = '7 hari' }) {
 
     const {getToken} = useAuth()
 
@@ -54,7 +54,7 @@ export default function CardAdmin() {
         try {
             const baseUrl = process.env.NEXT_PUBLIC_API_URL;
             const token = await getToken()
-            const {data} = await axios.get(`${baseUrl}/api/admin/dashboard`, {
+            const {data} = await axios.get(`${baseUrl}/api/admin/dashboard?period=${encodeURIComponent(selectedPeriod)}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             console.log(data)
@@ -72,8 +72,10 @@ export default function CardAdmin() {
     }
 
     useEffect(() => {
+        // refetch when selectedPeriod changes
+        setLoading(true)
         fetchDashboardData()
-    }, [])
+    }, [selectedPeriod])
 
     if (loading) return <Loading />
 

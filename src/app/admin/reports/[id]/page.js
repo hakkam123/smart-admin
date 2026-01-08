@@ -34,6 +34,7 @@ export default function ReportDetailPage() {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const router = useRouter();
+  const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || 'Rp. ';
   const IMAGE_PLACEHOLDER = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="%23f3f4f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%23888" font-size="14">No Image</text></svg>';
   useEffect(() => {
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
@@ -80,11 +81,13 @@ export default function ReportDetailPage() {
             },
             product: r.product ? {
               name: r.product.name || 'Product',
-              sku: r.product.sku || '',
+              description: r.product.description || '',
+              weight: r.product.weight || '',
               image: (Array.isArray(r.product.images) && r.product.images[0]) || r.product.image || IMAGE_PLACEHOLDER,
               price: r.product.price || '',
+              mrp: r.product.mrp || '',
               category: (r.product && r.product.category) ? (typeof r.product.category === 'string' ? r.product.category : (r.product.category?.name || '')) : (r.category?.name || ''),
-              warranty: r.product.warranty || ''
+              dimensions: r.product.dimensions || ''
             } : { name: r.store?.name || 'Store', sku: '', image: r.store?.logo || IMAGE_PLACEHOLDER },
             issue: r.subject || r.issue || '',
             description: r.message || '',
@@ -101,6 +104,7 @@ export default function ReportDetailPage() {
             submittedAt: r.submittedAt || null,
             reviewedAt: r.reviewedAt || null,
             resolvedAt: r.resolvedAt || null,
+            rejectedAt: r.rejectedAt || null,
           };
 
           // compute human-friendly responseTime (use resolvedAt > reviewedAt > submittedAt)
@@ -117,18 +121,35 @@ export default function ReportDetailPage() {
             return `${days} days`;
           };
 
-          const lastResponseTs = normalized.resolvedAt || normalized.reviewedAt || normalized.submittedAt || null;
+          const lastResponseTs = normalized.resolvedAt || normalized.reviewedAt || normalized.submittedAt || normalized.rejectedAt || null;
           normalized.responseTime = lastResponseTs ? formatTimeAgo(lastResponseTs) : '';
 
-          // build simple timeline from timestamps
+          // build timeline from timestamps (include historical events regardless of current status)
           const tl = [];
-          if (normalized.submittedAt) tl.push({ id: 't-submitted', action: 'Complaint submitted', user: normalized.customer.name, timestamp: normalized.submittedAt, type: 'submission', details: 'Customer submitted the complaint' });
-          if (normalized.reviewedAt) tl.push({ id: 't-reviewed', action: 'Report reviewed', user: 'Seller', timestamp: normalized.reviewedAt, type: 'acknowledgment', details: 'Seller reviewed the report' });
-          if (normalized.resolvedAt) tl.push({ id: 't-resolved', action: 'Report resolved', user: 'Seller', timestamp: normalized.resolvedAt, type: 'resolution', details: 'Report marked as resolved' });
+          if (normalized.submittedAt) {
+            tl.push({ id: 't-submitted', action: 'Complaint submitted', user: normalized.customer.name, timestamp: normalized.submittedAt, type: 'submission', details: 'Customer submitted the complaint' });
+          }
 
-            setReport(normalized);
-            setTimeline(tl);
-            setStatus(normalized.status);
+          // in-progress (use reviewedAt)
+          if (normalized.reviewedAt) {
+            tl.push({ id: 't-inprogress', action: 'Report in progress', user: 'Seller', timestamp: normalized.reviewedAt, type: 'progress', details: 'Seller started working on the report' });
+          }
+
+          // Final status: resolved or rejected. For legacy rows where rejection used resolvedAt, prefer showing rejected when current status is rejected.
+          if (String(normalized.status).toLowerCase() === 'rejected') {
+            const ts = normalized.rejectedAt || normalized.resolvedAt || null;
+            if (ts) tl.push({ id: 't-rejected', action: 'Report rejected', user: 'Seller', timestamp: ts, type: 'resolution', details: 'Report marked as rejected' });
+          } else {
+            if (normalized.resolvedAt) tl.push({ id: 't-resolved', action: 'Report resolved', user: 'Seller', timestamp: normalized.resolvedAt, type: 'resolution', details: 'Report marked as resolved' });
+            if (normalized.rejectedAt) tl.push({ id: 't-rejected', action: 'Report rejected', user: 'Seller', timestamp: normalized.rejectedAt, type: 'resolution', details: 'Report marked as rejected' });
+          }
+
+          // sort chronologically (oldest first)
+          tl.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+          setReport(normalized);
+          setTimeline(tl);
+          setStatus(normalized.status);
         } else {
           setReport(null);
         }
@@ -146,62 +167,59 @@ export default function ReportDetailPage() {
     switch (status) {
       case 'new':
         return 'bg-yellow-100 text-yellow-800';
-      case 'reviewed':
-        return 'bg-indigo-100 text-indigo-800';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
       case 'resolved':
         return 'bg-green-100 text-green-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
-      case 'closed':
-        return 'bg-gray-100 text-gray-800';
-      case 'escalated':
-        return 'bg-pink-100 text-pink-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // priority display removed — helper dropped
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
-  const ALL_STATUSES = ['NEW','REVIEWED','IN_PROGRESS','RESOLVED','REJECTED','CLOSED','ESCALATED'];
+  const ALL_STATUSES = ['NEW','IN_PROGRESS','RESOLVED','REJECTED'];
 
   // determine statuses that already occurred (don't show them as options)
   // determine statuses that already occurred (don't show them as options)
   const occurred = new Set();
   if (report?.submittedAt) occurred.add('NEW');
-  if (report?.reviewedAt) { occurred.add('REVIEWED'); occurred.add('IN_PROGRESS'); }
+  if (report?.reviewedAt) { occurred.add('IN_PROGRESS'); }
   if (report?.resolvedAt) occurred.add('RESOLVED');
+  if (report?.rejectedAt) occurred.add('REJECTED');
   if (report?.status) occurred.add(String(report.status).toUpperCase());
 
   // determine allowed statuses with ordering: cannot go directly to RESOLVED unless already IN_PROGRESS/reviewed
   // Guard against report being null by using optional chaining
   const currentStatusLower = report?.status ? String(report.status).toLowerCase() : null;
   const hasResolved = !!report?.resolvedAt;
+  const hasRejected = !!report?.rejectedAt;
   let allowedStatuses = ALL_STATUSES.filter(s => !occurred.has(s));
-  if (currentStatusLower === 'resolved' || hasResolved) {
+  if (currentStatusLower === 'resolved' || hasResolved || currentStatusLower === 'rejected' || hasRejected) {
     allowedStatuses = [];
   } else {
     // ensure cannot jump directly to RESOLVED
-    if (!report?.reviewedAt && currentStatusLower !== 'in_progress') {
+    if (currentStatusLower !== 'in_progress') {
+      // from NEW, only allow moving to IN_PROGRESS (prevent resolving directly)
       allowedStatuses = allowedStatuses.filter(s => s !== 'RESOLVED');
     }
   }
+
+  // Keep the select value in sync with allowedStatuses to avoid sending an invalid/stale value
+  useEffect(() => {
+    try {
+      if (!allowedStatuses || !allowedStatuses.length) return;
+      const curUp = status ? String(status).toUpperCase() : null;
+      if (!curUp || !allowedStatuses.includes(curUp)) {
+        setStatus(String(allowedStatuses[0]).toLowerCase());
+      }
+    } catch (e) { /* ignore */ }
+  }, [JSON.stringify(allowedStatuses)]);
 
   if (loading) return (<div className="p-6">Loading report...</div>);
   if (!report) return (<div className="p-6">Report not found</div>);
@@ -226,7 +244,11 @@ export default function ReportDetailPage() {
       const id = routeParams?.id;
       if (!id) return;
 
-      const res = await axios.patch(`${API_BASE}/api/store/reports/${id}`, { status: String(status).toUpperCase() }, { headers });
+  // Read the select value directly in case React state is stale
+  const selectEl = typeof document !== 'undefined' ? document.getElementById('report-status-select') : null;
+  const toSend = selectEl ? String(selectEl.value).toUpperCase() : String(status).toUpperCase();
+  console.log('Sending status to server:', toSend);
+  const res = await axios.patch(`${API_BASE}/api/store/reports/${id}`, { status: toSend }, { headers });
       if (res.data && res.data.report) {
         // re-normalize by reusing earlier logic (simple approach: refresh page state)
         const r = res.data.report;
@@ -244,12 +266,14 @@ export default function ReportDetailPage() {
           },
           product: r.product ? {
             name: r.product.name || 'Product',
-            sku: r.product.sku || '',
+            mrp: r.product.mrp || '',
+            description: r.product.description || '',
+            weight: r.product.weight || '',
             image: (Array.isArray(r.product.images) && r.product.images[0]) || r.product.image || IMAGE_PLACEHOLDER,
             price: r.product.price || '',
             category: (r.product && r.product.category) ? (typeof r.product.category === 'string' ? r.product.category : (r.product.category?.name || '')) : (r.category?.name || ''),
-            warranty: r.product.warranty || ''
-          } : { name: r.store?.name || 'Store', sku: '', image: r.store?.logo || IMAGE_PLACEHOLDER },
+            dimensions: r.product.dimensions || ''
+          } : { name: r.store?.name || 'Store', mrp: '', image: r.store?.logo || IMAGE_PLACEHOLDER },
           issue: r.subject || r.issue || '',
           description: r.message || '',
           priority: r.priority ? String(r.priority).toLowerCase() : 'medium',
@@ -263,9 +287,11 @@ export default function ReportDetailPage() {
           submittedAt: r.submittedAt || null,
           reviewedAt: r.reviewedAt || null,
           resolvedAt: r.resolvedAt || null,
+          rejectedAt: r.rejectedAt || null,
         };
 
-        const lastResponseTs = normalized.resolvedAt || normalized.reviewedAt || normalized.submittedAt || null;
+        // prefer resolved, then rejected, then submitted for response time
+        const lastResponseTs = normalized.resolvedAt || normalized.rejectedAt || normalized.submittedAt || null;
         const formatTimeAgo = (ts) => {
           if (!ts) return '';
           const t = new Date(ts).getTime();
@@ -281,9 +307,23 @@ export default function ReportDetailPage() {
         normalized.responseTime = lastResponseTs ? formatTimeAgo(lastResponseTs) : '';
 
         const tl = [];
-        if (normalized.submittedAt) tl.push({ id: 't-submitted', action: 'Complaint submitted', user: normalized.customer.name, timestamp: normalized.submittedAt, type: 'submission', details: 'Customer submitted the complaint' });
-        if (normalized.reviewedAt) tl.push({ id: 't-reviewed', action: 'Report reviewed', user: 'Seller', timestamp: normalized.reviewedAt, type: 'acknowledgment', details: 'Seller reviewed the report' });
-        if (normalized.resolvedAt) tl.push({ id: 't-resolved', action: 'Report resolved', user: 'Seller', timestamp: normalized.resolvedAt, type: 'resolution', details: 'Report marked as resolved' });
+        if (normalized.submittedAt) {
+          tl.push({ id: 't-submitted', action: 'Complaint submitted', user: normalized.customer.name, timestamp: normalized.submittedAt, type: 'submission', details: 'Customer submitted the complaint' });
+        }
+
+        if (normalized.reviewedAt) {
+          tl.push({ id: 't-inprogress', action: 'Report in progress', user: 'Seller', timestamp: normalized.reviewedAt, type: 'progress', details: 'Seller started working on the report' });
+        }
+
+        if (String(normalized.status).toLowerCase() === 'rejected') {
+          const ts = normalized.rejectedAt || normalized.resolvedAt || null;
+          if (ts) tl.push({ id: 't-rejected', action: 'Report rejected', user: 'Seller', timestamp: ts, type: 'resolution', details: 'Report marked as rejected' });
+        } else {
+          if (normalized.resolvedAt) tl.push({ id: 't-resolved', action: 'Report resolved', user: 'Seller', timestamp: normalized.resolvedAt, type: 'resolution', details: 'Report marked as resolved' });
+          if (normalized.rejectedAt) tl.push({ id: 't-rejected', action: 'Report rejected', user: 'Seller', timestamp: normalized.rejectedAt, type: 'resolution', details: 'Report marked as rejected' });
+        }
+
+        tl.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
         setReport(normalized);
         setTimeline(tl);
@@ -350,6 +390,15 @@ export default function ReportDetailPage() {
     } catch (e) { return url; }
   };
 
+  const calculateDiscount = () => {
+    if (report.product?.mrp && report.product?.price && report.product.mrp > report.product.price) {
+      return Math.round(((report.product.mrp - report.product.price) / report.product.mrp) * 100);
+    }
+    return 0;
+  };
+
+  const discount = calculateDiscount();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -376,9 +425,6 @@ export default function ReportDetailPage() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-gray-900">Report Overview</h2>
               <div className="flex space-x-2">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(report.priority)}`}>
-                  {formatLabelUpper(report.priority)} PRIORITY
-                </span>
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(report.status)}`}>
                   {formatLabelUpper(report.status)}
                 </span>
@@ -436,28 +482,34 @@ export default function ReportDetailPage() {
                   unoptimized
                 />
                 <div className="flex-1 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                    <p className="text-sm text-gray-900 font-medium">{report.product.name}</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                      <p className="text-sm text-gray-900 font-medium">{report.product.name}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <p className="text-sm text-gray-900">{report.product.description || '-'}</p>
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                      <p className="text-sm text-gray-900">{report.product.sku || '-'}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Actual Price</label>
+                      <p className="text-sm text-gray-900">{report.product.mrp || '-'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Offer Price</label>
                       <p className="text-sm text-gray-900">{report.product.price || '-'}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                      <p className="text-sm text-gray-900">{report.product.category || '-'}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
+                      <p className="text-sm text-gray-900">{report.product.weight ? `${report.product.weight} Kg` : '-'}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Warranty</label>
-                      <p className="text-sm text-gray-900">{report.product.warranty || '-'}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Dimensions</label>
+                      <p className="text-sm text-gray-900">{report.product.dimensions || '-'}</p>
                     </div>
                   </div>
                 </div>
@@ -507,6 +559,7 @@ export default function ReportDetailPage() {
                   <div className={`w-3 h-3 mt-2 rounded-full ${
                     item.type === 'submission' ? 'bg-red-500' :
                     item.type === 'acknowledgment' ? 'bg-blue-500' :
+                    item.type === 'progress' ? 'bg-blue-500' :
                     item.type === 'investigation' ? 'bg-yellow-500' :
                     'bg-gray-500'
                   }`}></div>
@@ -571,10 +624,10 @@ export default function ReportDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                {String(report.status).toLowerCase() === 'resolved' || report.resolvedAt ? (
+                {String(report.status).toLowerCase() === 'resolved' || report.resolvedAt || String(report.status).toLowerCase() === 'rejected' ? (
                   <p className="text-sm text-gray-900 font-medium">{formatLabelUpper(report.status)}</p>
                 ) : (
-                  <select 
+                  <select id="report-status-select"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 text-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -591,7 +644,7 @@ export default function ReportDetailPage() {
                 )}
               </div>
 
-              {!(String(report.status).toLowerCase() === 'resolved' || report.resolvedAt) && (
+              {!(String(report.status).toLowerCase() === 'resolved' || report.resolvedAt || String(report.status).toLowerCase() === 'rejected') && (
                 <div>
                   <button onClick={handleUpdateStatus} disabled={updating} className={`w-full px-4 py-2 ${updating ? 'opacity-70 cursor-not-allowed' : ''} bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-md hover:from-orange-600 hover:to-orange-700 font-medium`}>
                     {updating ? 'Updating...' : 'Update Report'}
@@ -602,8 +655,8 @@ export default function ReportDetailPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
+          {/* <div className="bg-white rounded-lg shadow p-6"> */}
+            {/* <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
             <div className="space-y-3">
               <button
                 onClick={() => {
@@ -618,14 +671,16 @@ export default function ReportDetailPage() {
                 className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Send Message
-              </button>
+              </button> */}
               {/* <button className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Mark as Resolved
               </button> */}
-            </div>
-          </div>
+            {/* </div>
+          </div> */}
         </div>
       </div>
     </div>
   );
 }
+
+
