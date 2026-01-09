@@ -20,11 +20,12 @@ export default function EditCategoryPage() {
   const { getToken } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false); // Track if data is loaded
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     image: '',
-    imageFile: null, 
+    imageFile: null,
     status: 'active',
     slug: '',
     metaTitle: '',
@@ -32,9 +33,9 @@ export default function EditCategoryPage() {
     parentCategory: ''
   });
 
-  // Auto generate slug from name
+  // Auto generate slug from name (only after data is loaded and user changes name)
   useEffect(() => {
-    if (formData.name) {
+    if (formData.name && isDataLoaded) {
       const slug = formData.name
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '')
@@ -43,7 +44,7 @@ export default function EditCategoryPage() {
         .trim();
       setFormData(prev => ({ ...prev, slug }));
     }
-  }, [formData.name]);
+  }, [formData.name, isDataLoaded]);
 
   // Fetch category data on component mount
   useEffect(() => {
@@ -58,25 +59,30 @@ export default function EditCategoryPage() {
         if (response.data.success) {
           const cat = response.data.data;
           setFormData({
-            name: cat.name,
-            description: cat.description,
-            image: cat.image,
-            status: cat.status.toLowerCase(),
-            slug: cat.slug,
-            metaTitle: cat.metaTitle,
-            metaDescription: cat.metaDescription,
+            name: cat.name || '',
+            description: cat.description || '',
+            image: cat.image || '',
+            imageFile: null,
+            status: cat.status ? cat.status.toLowerCase() : 'active',
+            slug: cat.slug || '',
+            metaTitle: cat.metaTitle || '',
+            metaDescription: cat.metaDescription || '',
             parentCategory: cat.parentCategoryId || ''
           });
         }
       } catch (error) {
         toast.error(error?.response?.data?.message || error.message || 'Failed to fetch category');
+        console.error('Error fetching category:', error);
       } finally {
         setLoading(false);
+        setIsDataLoaded(true); // Mark data as loaded
       }
     };
 
     if (id) {
       fetchCategory();
+    } else {
+      setLoading(false);
     }
   }, [id, params.id, getToken]);
 
@@ -84,10 +90,10 @@ export default function EditCategoryPage() {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' 
-        ? checked 
-        : name === 'sortOrder' 
-          ? parseInt(value) || 0 
+      [name]: type === 'checkbox'
+        ? checked
+        : name === 'sortOrder'
+          ? parseInt(value) || 0
           : value
     }));
   };
@@ -149,7 +155,7 @@ export default function EditCategoryPage() {
 
       if (response.data.success) {
         toast.success('Category updated successfully');
-        router.push(`/master/categories/${params.id}`);
+        router.push(`/master/categories`);
       } else {
         toast.error(response.data.message || 'Failed to update category');
       }
@@ -223,110 +229,110 @@ export default function EditCategoryPage() {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Basic Information */}
         <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+          <div className="flex items-center gap-2 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+          </div>
+
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category Name *
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                  placeholder="Enter category name"
+                  required
+                />
+              </div>
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category Name *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                    placeholder="Enter category name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <div className="relative">
-                  <textarea
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows={4}
-                    className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
-                    placeholder="Enter category description"
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <div className="relative">
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full pl-5 text-gray-500 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent"
+                  placeholder="Enter category description"
+                />
               </div>
             </div>
           </div>
+        </div>
 
         {/* Category Image */}
         <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900">Category Image</h2>
+          <div className="flex items-center gap-2 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Category Image</h2>
+          </div>
+
+          <div className="space-y-4">
+            {/* Image Upload Area */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
+              <div className="space-y-4">
+                <div className="flex justify-center">
+                  <FiUpload className="w-12 h-12 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">
+                    <span className="font-medium text-slate-600">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
+                </div>
+                <label
+                  htmlFor="image-upload"
+                  className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <FiImage className="w-4 h-4 mr-2" />
+                  {formData.image ? 'Change Image' : 'Choose File'}
+                </label>
+                <input
+                  id="image-upload"
+                  name="image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageFileChange}
+                  className="hidden"
+                />
+              </div>
             </div>
 
-            <div className="space-y-4">
-              {/* Image Upload Area */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-slate-400 transition-colors">
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <FiUpload className="w-12 h-12 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      <span className="font-medium text-slate-600">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-                  </div>
-                  <label
-                    htmlFor="image-upload"
-                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
+            {/* Image Preview */}
+            {formData.image && (
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-sm font-medium text-gray-700">Image Preview</p>
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="text-red-600 hover:text-red-800 text-sm"
                   >
-                    <FiImage className="w-4 h-4 mr-2" />
-                    {formData.image ? 'Change Image' : 'Choose File'}
-                  </label>
-                  <input
-                    id="image-upload"
-                    name="image-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageFileChange}
-                    className="hidden"
+                    Remove Image
+                  </button>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <Image
+                    src={formData.image}
+                    alt="Preview"
+                    width={200}
+                    height={160}
+                    className="max-h-40 rounded object-contain"
+                    unoptimized
                   />
                 </div>
               </div>
-
-              {/* Image Preview */}
-              {formData.image && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-sm font-medium text-gray-700">Image Preview</p>
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Remove Image
-                    </button>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <Image
-                      src={formData.image}
-                      alt="Preview"
-                      width={200}
-                      height={160}
-                      className="max-h-40 rounded object-contain"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
+            )}
           </div>
+        </div>
       </form>
     </div>
   );
