@@ -1,12 +1,12 @@
- 'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import axios from 'axios';
 import Link from 'next/link';
-import { 
-  FiUsers, 
-  FiShoppingCart, 
+import {
+  FiUsers,
+  FiShoppingCart,
   FiFilter,
   FiCalendar,
   FiExternalLink,
@@ -23,7 +23,7 @@ import {
 import CardAdmin from '@/components/master/CardAdmin';
 
 export default function MasterDashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState('7 hari');
+  const [selectedPeriod, setSelectedPeriod] = useState('Semua');
   const [recentOrders, setRecentOrders] = useState([]);
   const [recentChats, setRecentChats] = useState([]);
   const [recentReports, setRecentReports] = useState([]);
@@ -161,11 +161,12 @@ export default function MasterDashboard() {
         <div className="flex items-center space-x-3">
           <div className="flex items-center px-3 py-2 border border-gray-600 text-gray-600 rounded-lg text-sm">
             <FiCalendar className="mr-2" />
-            <select 
-              value={selectedPeriod} 
+            <select
+              value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="bg-transparent outline-none cursor-pointer"
             >
+              <option value="Semua">Semua</option>
               <option value="7 hari">7 hari</option>
               <option value="1 bulan">1 bulan</option>
               <option value="3 bulan">3 bulan</option>
@@ -176,7 +177,7 @@ export default function MasterDashboard() {
         </div>
       </div>
 
-  <CardAdmin selectedPeriod={selectedPeriod} />
+      <CardAdmin selectedPeriod={selectedPeriod} />
 
       {/* (Top) removed: Recent User Reports moved into Best Product Sale area below */}
 
@@ -230,12 +231,12 @@ export default function MasterDashboard() {
               </Link>
             </div>
           </div>
-          
+
           {/* Table Headers */}
           <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
             <div className="grid grid-cols-7 gap-4 text-xs font-medium text-gray-600 uppercase tracking-wider">
               <span>No</span>
-              <span>Product</span>
+              {/* <span>Product</span> */}
               <span>Product Name</span>
               <span>Quantity</span>
               <span>Total Price</span>
@@ -243,7 +244,7 @@ export default function MasterDashboard() {
               <span>Status</span>
             </div>
           </div>
-          
+
           {/* Table Content */}
           <div className="p-6">
             <div className="space-y-3">
@@ -262,7 +263,7 @@ export default function MasterDashboard() {
                 return (
                   <div key={order.id || idx} className="grid grid-cols-7 gap-4 text-sm py-3 border-b border-gray-100 items-center">
                     <span className="text-gray-900">{idx + 1}</span>
-                    <span className="text-gray-600">{productId}</span>
+                    {/* <span className="text-gray-600">{productId}</span> */}
                     <span className="text-gray-900">{productName}</span>
                     <span className="text-gray-600">{quantity}</span>
                     <span className="text-gray-900 font-medium">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(total)}</span>

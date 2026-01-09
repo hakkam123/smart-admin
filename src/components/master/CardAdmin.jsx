@@ -54,7 +54,9 @@ export default function CardAdmin({ selectedPeriod = '7 hari' }) {
         try {
             const baseUrl = process.env.NEXT_PUBLIC_API_URL;
             const token = await getToken()
-            const {data} = await axios.get(`${baseUrl}/api/admin/dashboard?period=${encodeURIComponent(selectedPeriod)}`, {
+            const {data} = selectedPeriod === 'Semua' ? await axios.get(`${baseUrl}/api/admin/dashboard`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }) : await axios.get(`${baseUrl}/api/admin/dashboard?period=${encodeURIComponent(selectedPeriod)}`, {
                 headers: { Authorization: `Bearer ${token}` }
             })
             console.log(data)
