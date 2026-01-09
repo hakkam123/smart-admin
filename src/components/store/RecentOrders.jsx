@@ -36,7 +36,7 @@ export default function RecentOrders() {
 
   const fetchRecentOrders = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
 
       const { data } = await axios.get(`${baseUrl}/api/store/recent-orders?limit=5`, {

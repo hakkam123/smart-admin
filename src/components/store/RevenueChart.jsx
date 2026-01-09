@@ -20,7 +20,7 @@ export default function RevenueChart({ period }) {
 
   const fetchChartData = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
 
       // Buat URL dengan parameter period jika ada
@@ -41,6 +41,7 @@ export default function RevenueChart({ period }) {
   };
 
   useEffect(() => {
+    setLoading(true); // Set loading saat period berubah
     fetchChartData();
   }, [period]);
 

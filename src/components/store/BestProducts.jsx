@@ -14,7 +14,7 @@ export default function BestProducts() {
 
   const fetchBestProducts = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = await getToken();
 
       const { data } = await axios.get(`${baseUrl}/api/store/best-products?limit=5`, {
